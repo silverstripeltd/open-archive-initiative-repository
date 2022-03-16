@@ -1,0 +1,5 @@
+App\Tests\OpenArchive\Mocks\FakeDataObject:
+  object1:
+    Title: Object1
+  object2:
+    Title: Object1

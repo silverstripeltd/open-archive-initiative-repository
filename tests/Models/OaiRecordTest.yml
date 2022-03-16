@@ -1,0 +1,31 @@
+Terraformers\OpenArchive\Models\OaiMember:
+  member1:
+    FirstName: Test1
+    Surname: Person1
+  member2:
+    FirstName: Test2
+    Surname: Person2
+
+Terraformers\OpenArchive\Models\OaiSet:
+  set1:
+    Title: Set1
+  set2:
+    Title: Set2
+
+Terraformers\OpenArchive\Models\OaiRecord:
+  record1:
+    Title: Record1
+    OaiContributors:
+      - =>Terraformers\OpenArchive\Models\OaiMember.member1
+    OaiCreators:
+      - =>Terraformers\OpenArchive\Models\OaiMember.member2
+    OaiSets:
+      - =>Terraformers\OpenArchive\Models\OaiSet.set1
+  record2:
+    Title: Record2
+    OaiContributors:
+      - =>Terraformers\OpenArchive\Models\OaiMember.member2
+    OaiCreators:
+      - =>Terraformers\OpenArchive\Models\OaiMember.member1
+  record3:
+    Title: Record3

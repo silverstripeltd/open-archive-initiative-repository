@@ -14,9 +14,14 @@ use Terraformers\OpenArchive\Documents\IdentifyDocument;
 use Terraformers\OpenArchive\Documents\ListMetadataFormatsDocument;
 use Terraformers\OpenArchive\Documents\ListRecordsDocument;
 use Terraformers\OpenArchive\Documents\OaiDocument;
+use Terraformers\OpenArchive\Formatters\OaiDcFormatter;
 
 class OaiController extends Controller
 {
+
+    public const DELETED_SUPPORT_NO = 'no';
+    public const DELETED_SUPPORT_PERSISTENT = 'persistent';
+    public const DELETED_SUPPORT_TRANSIENT = 'transient';
 
     /**
      * Environment Variable that you should set for whatever you would like the admin email to be
@@ -40,9 +45,13 @@ class OaiController extends Controller
         OaiDocument::VERB_LIST_RECORDS,
     ];
 
+    private static array $supported_formats = [
+        'oai_dc' => OaiDcFormatter::class,
+    ];
+
     private static string $supportedProtocol = '2.0';
 
-    private static string $supportedDeletedRecord = 'persistent';
+    private static string $supportedDeletedRecord = self::DELETED_SUPPORT_PERSISTENT;
 
     private static string $supportedGranularity = 'YYYY-MM-DDThh:mm:ssZ';
 

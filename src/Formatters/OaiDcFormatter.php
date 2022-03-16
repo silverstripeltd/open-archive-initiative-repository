@@ -2,8 +2,8 @@
 
 namespace Terraformers\OpenArchive\Formatters;
 
-use Terraformers\OpenArchive\Models\OaiRecord;
 use DOMElement;
+use Terraformers\OpenArchive\Models\OaiRecord;
 
 class OaiDcFormatter extends OaiRecordFormatter
 {

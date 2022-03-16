@@ -2,12 +2,12 @@
 
 namespace Terraformers\OpenArchive\Extensions;
 
-use Terraformers\OpenArchive\Jobs\OaiRecordUpdateJob;
-use Terraformers\OpenArchive\Models\OaiRecord;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\HasManyList;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
+use Terraformers\OpenArchive\Jobs\OaiRecordUpdateJob;
+use Terraformers\OpenArchive\Models\OaiRecord;
 
 /**
  * @property DataObject|$this $owner

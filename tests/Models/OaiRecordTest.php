@@ -2,10 +2,10 @@
 
 namespace App\Tests\OpenArchive\Models;
 
+use SilverStripe\Dev\SapphireTest;
 use Terraformers\OpenArchive\Models\OaiMember;
 use Terraformers\OpenArchive\Models\OaiRecord;
 use Terraformers\OpenArchive\Models\OaiSet;
-use SilverStripe\Dev\SapphireTest;
 
 class OaiRecordTest extends SapphireTest
 {

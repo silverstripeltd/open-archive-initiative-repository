@@ -2,8 +2,8 @@
 
 namespace App\Tests\OpenArchive\Models;
 
-use Terraformers\OpenArchive\Models\OaiMember;
 use SilverStripe\Dev\SapphireTest;
+use Terraformers\OpenArchive\Models\OaiMember;
 
 class OaiMemberTest extends SapphireTest
 {

@@ -2,13 +2,13 @@
 
 namespace Terraformers\OpenArchive\Jobs;
 
-use Terraformers\OpenArchive\Models\OaiRecord;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
 use Symbiote\QueuedJobs\Services\QueuedJob;
+use Terraformers\OpenArchive\Models\OaiRecord;
 
 /**
  * Note: Multiple actions could have been triggered on the DataObject (including archive/restore/etc) before this Job

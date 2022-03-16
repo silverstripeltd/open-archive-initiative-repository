@@ -2,9 +2,9 @@
 
 namespace App\Tests\OpenArchive\Mocks;
 
-use Terraformers\OpenArchive\Extensions\VersionedOaiRecordManager;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
+use Terraformers\OpenArchive\Extensions\VersionedOaiRecordManager;
 
 /**
  * @property string $Title

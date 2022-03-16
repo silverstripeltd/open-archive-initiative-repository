@@ -2,9 +2,9 @@
 
 namespace Terraformers\OpenArchive\Models\Relationships;
 
+use SilverStripe\ORM\DataObject;
 use Terraformers\OpenArchive\Models\OaiRecord;
 use Terraformers\OpenArchive\Models\OaiSet;
-use SilverStripe\ORM\DataObject;
 
 /**
  * @property int $ParentID

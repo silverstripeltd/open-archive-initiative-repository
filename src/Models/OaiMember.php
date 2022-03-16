@@ -2,11 +2,11 @@
 
 namespace Terraformers\OpenArchive\Models;
 
-use Terraformers\OpenArchive\Models\Relationships\OaiRecordOaiContributor;
-use Terraformers\OpenArchive\Models\Relationships\OaiRecordOaiCreator;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\HasManyList;
 use SilverStripe\ORM\ManyManyThroughList;
+use Terraformers\OpenArchive\Models\Relationships\OaiRecordOaiContributor;
+use Terraformers\OpenArchive\Models\Relationships\OaiRecordOaiCreator;
 
 /**
  * @property string $FirstName

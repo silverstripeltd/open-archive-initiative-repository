@@ -20,7 +20,7 @@ class IdentifyDocument extends OaiDocument
         $domElement->nodeValue = $name;
     }
 
-    public function setBaseURL(string $url): void
+    public function setBaseUrl(string $url): void
     {
         $domElement = $this->findOrCreateElement('baseURL', $this->getIdentifyElement());
         $domElement->nodeValue = $url;

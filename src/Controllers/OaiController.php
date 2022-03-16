@@ -2,7 +2,6 @@
 
 namespace Terraformers\OpenArchive\Controllers;
 
-use Exception;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
@@ -82,25 +81,25 @@ class OaiController extends Controller
      */
     protected function Identify(HTTPRequest $request): HTTPResponse
     {
-        $adminEmail = Environment::getEnv(static::OAI_API_ADMIN_EMAIL);
-
-        if (!$adminEmail) {
-            throw new Exception('Administrator email (environment variable) must be set');
-        }
-
-        $requestUrl = sprintf('%s%s', Director::absoluteBaseURL(), $request->getURL());
-
-        $this->extend('updateOaiRequestUrl', $requestUrl);
-
         $xmlDocument = IdentifyDocument::create();
+
+        // Response Date defaults to the time of the Request. Extension point is provided in this method
         $xmlDocument->setResponseDate($this->getResponseDate());
-        $xmlDocument->setRequestUrl($requestUrl);
-        $xmlDocument->setBaseURL($requestUrl);
+        // Request URL defaults to the current URL. Extension point is provided in this method
+        $xmlDocument->setRequestUrl($this->getRequestUrl($request));
+        // Base URL defaults to the current URL. Extension point is provided in this method
+        $xmlDocument->setBaseUrl($this->getBaseUrl($request));
+        // Protocol Version defaults to 2.0. You can update the configuration if required
         $xmlDocument->setProtocolVersion($this->config()->get('supportedProtocol'));
+        // Deleted Record support defaults to "persistent". You can update the configuration if required
         $xmlDocument->setDeletedRecord($this->config()->get('supportedDeletedRecord'));
+        // Date Granularity support defaults to date and time. You can update the configuration if required
         $xmlDocument->setGranularity($this->config()->get('supportedGranularity'));
-        $xmlDocument->setAdminEmail($adminEmail);
+        // You should set your env var appropriately for this value
+        $xmlDocument->setAdminEmail(Environment::getEnv(OaiController::OAI_API_ADMIN_EMAIL));
+        // Earliest Datestamp defaults to the Jan 1970 (the start of UNIX). Extension point is provided in this method
         $xmlDocument->setEarliestDatestamp($this->getEarliestDatestamp());
+        // Repository Name defaults to the Site name. Extension point is provided in this method
         $xmlDocument->setRepositoryName($this->getRepositoryName());
 
         $this->getResponse()->setBody($xmlDocument->getDocumentBody());
@@ -140,6 +139,24 @@ class OaiController extends Controller
         $this->getResponse()->setBody($xmlDocument->getDocumentBody());
 
         return $this->getResponse();
+    }
+
+    protected function getRequestUrl(HTTPRequest $request): string
+    {
+        $requestUrl = sprintf('%s%s', Director::absoluteBaseURL(), $request->getURL());
+
+        $this->extend('updateOaiRequestUrl', $requestUrl);
+
+        return $requestUrl;
+    }
+
+    protected function getBaseUrl(HTTPRequest $request): string
+    {
+        $baseUrl = sprintf('%s%s', Director::absoluteBaseURL(), $request->getURL());
+
+        $this->extend('updateOaiBaseUrl', $baseUrl);
+
+        return $baseUrl;
     }
 
     protected function getResponseDate(): int

@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+env:
+  OAI_API_ADMIN_EMAIL: info@test.com
+
 jobs:
   ci:
     uses: silverstripe/github-actions-ci-cd/.github/workflows/ci.yml@0.1.15

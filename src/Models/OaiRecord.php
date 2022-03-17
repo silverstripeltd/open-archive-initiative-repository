@@ -11,11 +11,9 @@ use Terraformers\OpenArchive\Models\Relationships\OaiRecordOaiSet;
 
 /**
  * @property string $Coverage
- * @property string $Date
  * @property string $Description
  * @property int $Deleted
  * @property string $Format
- * @property string $Identifier
  * @property string $Language
  * @property string $Publisher
  * @property string $RecordClass
@@ -23,7 +21,7 @@ use Terraformers\OpenArchive\Models\Relationships\OaiRecordOaiSet;
  * @property string $Relation
  * @property string $Rights
  * @property string $Source
- * @property string $Subjects CSV of subjects
+ * @property string $Subjects CSV of subjects. Separator = ",", Enclosure = '"', Escape = "\\"
  * @property string $Title
  * @property string $Type
  * @method HasManyList|OaiRecordOaiContributor[] OaiRecordOaiContributors()
@@ -37,11 +35,9 @@ class OaiRecord extends DataObject
 {
 
     public const FIELD_COVERAGE = 'Coverage';
-    public const FIELD_DATE = 'Date';
     public const FIELD_DESCRIPTION = 'Description';
     public const FIELD_DELETED = 'Deleted';
     public const FIELD_FORMAT = 'Format';
-    public const FIELD_IDENTIFIER = 'Identifier';
     public const FIELD_LANGUAGE = 'Language';
     public const FIELD_PUBLISHER = 'Publisher';
     public const FIELD_RELATION = 'Relation';
@@ -53,10 +49,8 @@ class OaiRecord extends DataObject
 
     public const MANAGED_FIELDS = [
         self::FIELD_COVERAGE,
-        self::FIELD_DATE,
         self::FIELD_DESCRIPTION,
         self::FIELD_FORMAT,
-        self::FIELD_IDENTIFIER,
         self::FIELD_LANGUAGE,
         self::FIELD_PUBLISHER,
         self::FIELD_RELATION,
@@ -71,11 +65,9 @@ class OaiRecord extends DataObject
 
     private static array $db = [
         self::FIELD_COVERAGE => 'Varchar(255)',
-        self::FIELD_DATE => 'Datetime',
         self::FIELD_DESCRIPTION => 'Varchar(255)',
         self::FIELD_DELETED => 'Boolean(0)',
         self::FIELD_FORMAT => 'Varchar(255)',
-        self::FIELD_IDENTIFIER => 'Varchar(255)',
         self::FIELD_LANGUAGE => 'Varchar(255)',
         self::FIELD_PUBLISHER => 'Varchar(255)',
         self::FIELD_RELATION => 'Varchar(255)',

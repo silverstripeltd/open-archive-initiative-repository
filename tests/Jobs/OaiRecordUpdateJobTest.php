@@ -66,10 +66,8 @@ class OaiRecordUpdateJobTest extends SapphireTest
         // Check that each value set on our OaiRecord is as expected
         $this->assertEquals(0, $oaiRecord->Deleted);
         $this->assertEquals('CoverageValue', $oaiRecord->Coverage);
-        $this->assertEquals($page->LastEdited, $oaiRecord->Date);
         $this->assertEquals('DescriptionValue', $oaiRecord->Description);
         $this->assertEquals('FormatValue', $oaiRecord->Format);
-        $this->assertEquals($page->ID, $oaiRecord->Identifier);
         $this->assertEquals('LanguageValue', $oaiRecord->Language);
         $this->assertEquals('PublisherValue', $oaiRecord->Publisher);
         $this->assertEquals('RelationValue', $oaiRecord->Relation);

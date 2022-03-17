@@ -5,8 +5,10 @@ namespace Terraformers\OpenArchive\Documents;
 use DOMDocument;
 use DOMElement;
 use Exception;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\FieldType\DBDatetime;
+use Terraformers\OpenArchive\Formatters\OaiDcFormatter;
 
 /**
  * This abstract class provides you with a basic XML structure that every OAI response needs to follow. That being:
@@ -120,6 +122,12 @@ abstract class OaiDocument
     {
         $requestElement = $this->findOrCreateElement('request');
         $requestElement->setAttribute('verb', $verb);
+    }
+
+    public function setMetadataPrefix(string $metadataPrefix): void
+    {
+        $requestElement = $this->findOrCreateElement('request');
+        $requestElement->setAttribute('metadataPrefix', $metadataPrefix);
     }
 
     public function addError(string $errorCode): void

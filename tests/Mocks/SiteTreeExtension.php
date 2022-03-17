@@ -16,10 +16,8 @@ class SiteTreeExtension extends DataExtension
      */
     private static array $oai_fields = [
         'Coverage' => 'getCoverage',
-        'Date' => 'LastEdited',
         'Description' => 'MetaDescription',
         'Format' => 'getFormat',
-        'Identifier' => 'ID',
         'Language' => 'getLanguage',
         'Publisher' => 'getPublisher',
         'Relation' => 'getRelation',

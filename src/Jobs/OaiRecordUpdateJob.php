@@ -59,6 +59,7 @@ class OaiRecordUpdateJob extends AbstractQueuedJob implements QueuedJob
         }
 
         $this->updateOaiRecord($dataObject);
+        $this->isComplete = true;
     }
 
     protected function updateOaiRecord(DataObject $dataObject): void

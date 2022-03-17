@@ -21,9 +21,9 @@ use Terraformers\OpenArchive\Models\Relationships\OaiRecordOaiSet;
  * @property string $Relation
  * @property string $Rights
  * @property string $Source
- * @property string $Subjects CSV of subjects. Separator = ",", Enclosure = '"', Escape = "\\"
+ * @property string $Subjects CSV. Separator = ",", Enclosure = '"', Escape = "\\"
  * @property string $Title
- * @property string $Type
+ * @property string $Types CSV. Separator = ",", Enclosure = '"', Escape = "\\"
  * @method HasManyList|OaiRecordOaiContributor[] OaiRecordOaiContributors()
  * @method HasManyList|OaiRecordOaiCreator[] OaiRecordOaiCreators()
  * @method HasManyList|OaiRecordOaiSet[] OaiRecordOaiSets()
@@ -45,7 +45,7 @@ class OaiRecord extends DataObject
     public const FIELD_SOURCE = 'Source';
     public const FIELD_SUBJECTS = 'Subjects';
     public const FIELD_TITLE = 'Title';
-    public const FIELD_TYPE = 'Type';
+    public const FIELD_TYPE = 'Types';
 
     public const MANAGED_FIELDS = [
         self::FIELD_COVERAGE,

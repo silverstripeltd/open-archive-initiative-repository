@@ -25,7 +25,7 @@ class SiteTreeExtension extends DataExtension
         'Source' => 'getSource',
         'Subjects' => 'getSubjects',
         'Title' => 'Title',
-        'Type' => 'getType',
+        'Types' => 'getTypes',
     ];
 
     public function getCoverage(): string
@@ -76,9 +76,17 @@ class SiteTreeExtension extends DataExtension
         );
     }
 
-    public function getType(): string
+    public function getTypes(): string
     {
-        return 'TypeValue';
+        // Two hardcoded values plus one dynamic so that we can check it changes
+        return implode(
+            ',',
+            [
+                'type1',
+                'type2',
+                $this->owner->Title,
+            ]
+        );
     }
 
 }

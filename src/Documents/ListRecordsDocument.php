@@ -28,7 +28,7 @@ class ListRecordsDocument extends OaiDocument
         $listRecordsElement = $this->findOrCreateElement('ListRecords');
 
         foreach ($oaiRecords as $oaiRecord) {
-            $listRecordsElement->appendChild($this->formatter->generateDomElement($oaiRecord, true));
+            $listRecordsElement->appendChild($this->formatter->generateDomElement($this->document, $oaiRecord, true));
         }
     }
 

@@ -75,7 +75,7 @@ class OaiRecordUpdateJobTest extends SapphireTest
         $this->assertEquals('SourceValue', $oaiRecord->Source);
         $this->assertEquals(sprintf('subject1,subject2,%s', $finalTitle), $oaiRecord->Subjects);
         $this->assertEquals($finalTitle, $oaiRecord->Title);
-        $this->assertEquals('TypeValue', $oaiRecord->Type);
+        $this->assertEquals(sprintf('type1,type2,%s', $finalTitle), $oaiRecord->Types);
     }
 
     public function testMarkOaiRecordUnpublished(): void

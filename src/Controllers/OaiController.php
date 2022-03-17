@@ -101,6 +101,8 @@ class OaiController extends Controller
         $xmlDocument->setEarliestDatestamp($this->getEarliestDatestamp());
         // Repository Name defaults to the Site name. Extension point is provided in this method
         $xmlDocument->setRepositoryName($this->getRepositoryName());
+        // Domain can be edited through extension points provided. IDs are always just a number
+        $xmlDocument->setOaiIdentifier($this->getDomain($request), 1);
 
         $this->getResponse()->setBody($xmlDocument->getDocumentBody());
 
@@ -184,6 +186,15 @@ class OaiController extends Controller
         $this->extend('updateOaiRepositoryName', $repositoryName);
 
         return $repositoryName;
+    }
+
+    protected function getDomain(HTTPRequest $request): string
+    {
+        $domain = Director::host($request);
+
+        $this->extend('updateOaiDomain', $domain);
+
+        return $domain;
     }
 
 }

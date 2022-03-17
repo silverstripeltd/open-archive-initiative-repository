@@ -67,6 +67,39 @@ class IdentifyDocumentTest extends SapphireTest
         $this->assertEquals($expectedTwo, $domElement->nodeValue);
     }
 
+    public function testSetOaiIdentifier(): void
+    {
+        $document = IdentifyDocument::create();
+        $document->setOaiIdentifier('localhost.test', 1);
+
+        // Grab the DOMDocument so that we can access the DOMElement
+        $domDocument = $this->getDomDocument($document);
+        // Grab the DOMElement
+        $descriptionElement = $domDocument->getElementById('description');
+
+        $this->assertNotNull($descriptionElement);
+        $this->assertCount(1, $descriptionElement->childNodes);
+
+        $oaiIdentifierElement = $descriptionElement->firstChild;
+
+        $this->assertNotNull($oaiIdentifierElement);
+        $this->assertCount(4, $oaiIdentifierElement->childNodes);
+
+        $scheme = $oaiIdentifierElement->getElementsByTagName('scheme')->item(0);
+        $delimiter = $oaiIdentifierElement->getElementsByTagName('delimiter')->item(0);
+        $repoIdentifier = $oaiIdentifierElement->getElementsByTagName('repositoryIdentifier')->item(0);
+        $sampleIdentifier = $oaiIdentifierElement->getElementsByTagName('sampleIdentifier')->item(0);
+
+        $this->assertNotNull($scheme);
+        $this->assertEquals('oai', $scheme->nodeValue);
+        $this->assertNotNull($delimiter);
+        $this->assertEquals(':', $delimiter->nodeValue);
+        $this->assertNotNull($repoIdentifier);
+        $this->assertEquals('localhost.test', $repoIdentifier->nodeValue);
+        $this->assertNotNull($sampleIdentifier);
+        $this->assertEquals('oai:localhost.test:1', $sampleIdentifier->nodeValue);
+    }
+
     protected function getDomDocument(OaiDocument $document): DOMDocument
     {
         $reflection = new ReflectionClass(BaseDocument::class);

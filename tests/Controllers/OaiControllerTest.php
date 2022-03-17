@@ -85,7 +85,7 @@ class OaiControllerTest extends FunctionalTest
 
         $identify = $xml->children()->Identify;
 
-        $this->assertCount(7, $identify->children());
+        $this->assertCount(8, $identify->children());
         $this->assertTrue(isset($identify->children()->baseURL));
         $this->assertTrue(isset($identify->children()->protocolVersion));
         $this->assertTrue(isset($identify->children()->deletedRecord));
@@ -93,6 +93,7 @@ class OaiControllerTest extends FunctionalTest
         $this->assertTrue(isset($identify->children()->adminEmail));
         $this->assertTrue(isset($identify->children()->earliestDatestamp));
         $this->assertTrue(isset($identify->children()->repositoryName));
+        $this->assertTrue(isset($identify->children()->description));
     }
 
     public function badVerbUrlProvider(): array

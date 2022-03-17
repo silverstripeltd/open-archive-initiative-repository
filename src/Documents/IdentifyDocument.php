@@ -56,6 +56,36 @@ class IdentifyDocument extends OaiDocument
         $domElement->nodeValue = $granularityFormat;
     }
 
+    /**
+     * @param string $domain
+     * @param string|int $sampleId
+     * @return void
+     */
+    public function setOaiIdentifier(string $domain, $sampleId): void
+    {
+        $descriptionElement = $this->findOrCreateElement('description', $this->getIdentifyElement());
+
+        $identifierElement = $this->findOrCreateElement('oai-identifier', $descriptionElement);
+        $identifierElement->setAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/oai-identifier');
+        $identifierElement->setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+        $identifierElement->setAttribute(
+            'xsi:schemaLocation',
+            'http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd'
+        );
+
+        $schemeElement = $this->findOrCreateElement('scheme', $identifierElement);
+        $schemeElement->nodeValue = 'oai';
+
+        $delimiterElement = $this->findOrCreateElement('delimiter', $identifierElement);
+        $delimiterElement->nodeValue = ':';
+
+        $repoIdentifierElement = $this->findOrCreateElement('repositoryIdentifier', $identifierElement);
+        $repoIdentifierElement->nodeValue = $domain;
+
+        $sampleIdentifierElement = $this->findOrCreateElement('sampleIdentifier', $identifierElement);
+        $sampleIdentifierElement->nodeValue = sprintf('oai:%s:%s', $domain, $sampleId);
+    }
+
     protected function getIdentifyElement(): DOMElement
     {
         return $this->findOrCreateElement('Identify');

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Tests\OpenArchive\Extensions;
+namespace Terraformers\OpenArchive\Tests\Extensions;
 
-use App\Tests\OpenArchive\Mocks\FakeDataObject;
+use Terraformers\OpenArchive\Tests\Mocks\FakeDataObject;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\DB;

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Tests\OpenArchive\Jobs;
+namespace Terraformers\OpenArchive\Tests\Jobs;
 
-use App\Tests\OpenArchive\Mocks\SiteTreeExtension;
+use Terraformers\OpenArchive\Tests\Mocks\SiteTreeExtension;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Dev\SapphireTest;
 use Terraformers\OpenArchive\Extensions\VersionedOaiRecordManager;

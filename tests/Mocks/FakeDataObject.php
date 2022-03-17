@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\OpenArchive\Mocks;
+namespace Terraformers\OpenArchive\Tests\Mocks;
 
 use SilverStripe\ORM\DataObject;
 use Terraformers\OpenArchive\Extensions\OaiRecordManager;

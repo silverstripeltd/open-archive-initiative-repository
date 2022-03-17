@@ -1,4 +1,4 @@
-App\Tests\OpenArchive\Mocks\VersionedFakeDataObject:
+Terraformers\OpenArchive\Tests\Mocks\VersionedFakeDataObject:
   object1:
     Title: Object1
   object2:

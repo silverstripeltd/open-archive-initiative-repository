@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\OpenArchive\Models;
+namespace Terraformers\OpenArchive\Tests\Models;
 
 use SilverStripe\Dev\SapphireTest;
 use Terraformers\OpenArchive\Models\OaiSet;

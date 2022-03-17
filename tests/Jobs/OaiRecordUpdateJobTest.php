@@ -63,9 +63,21 @@ class OaiRecordUpdateJobTest extends SapphireTest
         /** @var OaiRecord $oaiRecord */
         $oaiRecord = $page->OaiRecords()->first();
 
+        // Check that each value set on our OaiRecord is as expected
         $this->assertEquals(0, $oaiRecord->Deleted);
-        $this->assertEquals($finalTitle, $oaiRecord->Title);
+        $this->assertEquals('CoverageValue', $oaiRecord->Coverage);
+        $this->assertEquals($page->LastEdited, $oaiRecord->Date);
+        $this->assertEquals('DescriptionValue', $oaiRecord->Description);
+        $this->assertEquals('FormatValue', $oaiRecord->Format);
+        $this->assertEquals($page->ID, $oaiRecord->Identifier);
+        $this->assertEquals('LanguageValue', $oaiRecord->Language);
+        $this->assertEquals('PublisherValue', $oaiRecord->Publisher);
+        $this->assertEquals('RelationValue', $oaiRecord->Relation);
+        $this->assertEquals('RightsValue', $oaiRecord->Rights);
+        $this->assertEquals('SourceValue', $oaiRecord->Source);
         $this->assertEquals(sprintf('subject1,subject2,%s', $finalTitle), $oaiRecord->Subjects);
+        $this->assertEquals($finalTitle, $oaiRecord->Title);
+        $this->assertEquals('TypeValue', $oaiRecord->Type);
     }
 
     public function testMarkOaiRecordUnpublished(): void

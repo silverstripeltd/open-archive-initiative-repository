@@ -2,18 +2,68 @@
 
 namespace Terraformers\OpenArchive\Tests\Mocks;
 
+use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\ORM\DataExtension;
 
+/**
+ * @property SiteTree|$this $owner
+ */
 class SiteTreeExtension extends DataExtension
 {
 
     /**
-     * Simple test of two OaiRecord fields, one pointing to a model property, and the other pointing to a model method
+     * Simple test of OaiRecord fields, some pointing to model properties, and the others pointing to model methods
      */
     private static array $oai_fields = [
-        'Title' => 'Title',
+        'Coverage' => 'getCoverage',
+        'Date' => 'LastEdited',
+        'Description' => 'MetaDescription',
+        'Format' => 'getFormat',
+        'Identifier' => 'ID',
+        'Language' => 'getLanguage',
+        'Publisher' => 'getPublisher',
+        'Relation' => 'getRelation',
+        'Rights' => 'getRights',
+        'Source' => 'getSource',
         'Subjects' => 'getSubjects',
+        'Title' => 'Title',
+        'Type' => 'getType',
     ];
+
+    public function getCoverage(): string
+    {
+        return 'CoverageValue';
+    }
+
+    public function getFormat(): string
+    {
+        return 'FormatValue';
+    }
+
+    public function getLanguage(): string
+    {
+        return 'LanguageValue';
+    }
+
+    public function getPublisher(): string
+    {
+        return 'PublisherValue';
+    }
+
+    public function getRelation(): string
+    {
+        return 'RelationValue';
+    }
+
+    public function getRights(): string
+    {
+        return 'RightsValue';
+    }
+
+    public function getSource(): string
+    {
+        return 'SourceValue';
+    }
 
     public function getSubjects(): string
     {
@@ -26,6 +76,11 @@ class SiteTreeExtension extends DataExtension
                 $this->owner->Title,
             ]
         );
+    }
+
+    public function getType(): string
+    {
+        return 'TypeValue';
     }
 
 }

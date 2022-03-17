@@ -1,16 +1,21 @@
 SilverStripe\CMS\Model\SiteTree:
   page1:
     Title: Page1
+    MetaDescription: DescriptionValue
   page2:
     Title: Page2
+    MetaDescription: DescriptionValue
   page3:
     Title: Page3
+    MetaDescription: DescriptionValue
   # page4 will not be published
   page4:
     Title: Page4
+    MetaDescription: DescriptionValue
   # page5 will be archived
   page5:
     Title: Page3
+    MetaDescription: DescriptionValue
 
 Terraformers\OpenArchive\Models\OaiRecord:
   record1:

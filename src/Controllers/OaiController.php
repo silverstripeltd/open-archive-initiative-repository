@@ -2,12 +2,12 @@
 
 namespace Terraformers\OpenArchive\Controllers;
 
+use Exception;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Environment;
-use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\FieldType\DBDatetime;
@@ -21,7 +21,6 @@ use Terraformers\OpenArchive\Documents\OaiDocument;
 use Terraformers\OpenArchive\Formatters\OaiDcFormatter;
 use Terraformers\OpenArchive\Formatters\OaiRecordFormatter;
 use Terraformers\OpenArchive\Models\OaiRecord;
-use Exception;
 
 class OaiController extends Controller
 {
@@ -170,9 +169,7 @@ class OaiController extends Controller
         // The metadataPrefix that records will be output in. Should match to one of our supported_formats
         $metadataPrefix = $request->getVar('metadataPrefix');
 
-        if (!$metadataPrefix
-            || !array_key_exists($metadataPrefix, $this->config()->get('supported_formats'))
-        ) {
+        if (!$metadataPrefix || !array_key_exists($metadataPrefix, $this->config()->get('supported_formats'))) {
             return $this->CannotDisseminateFormatResponse($request);
         }
 
@@ -263,7 +260,22 @@ class OaiController extends Controller
     ): DataList {
         $filters = [];
 
-        // Filter support still to be added
+        // Filter support still to be tested
+        if ($from) {
+            $filters['LastEdited:GreaterThanOrEqual'] = $from;
+        }
+
+        if ($until) {
+            $filters['LastEdited:LessThanOrEqual'] = $until;
+        }
+
+        if ($set) {
+            // Set support to be added
+        }
+
+        if ($resumptionToken) {
+            // Resumption token support to be added
+        }
 
         if (!$filters) {
             return OaiRecord::get();

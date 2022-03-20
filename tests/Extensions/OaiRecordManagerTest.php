@@ -2,13 +2,13 @@
 
 namespace Terraformers\OpenArchive\Tests\Extensions;
 
-use Terraformers\OpenArchive\Tests\Mocks\FakeDataObject;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\DB;
 use Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\OpenArchive\Jobs\OaiRecordUpdateJob;
+use Terraformers\OpenArchive\Tests\Mocks\FakeDataObject;
 
 class OaiRecordManagerTest extends SapphireTest
 {

@@ -48,9 +48,13 @@ class OaiControllerTest extends FunctionalTest
     /**
      * @dataProvider verbUrlProvider
      */
-    public function testBasicVerbResponse(string $baseUrl, string $verb): void
+    public function testBasicVerbResponse(string $baseUrl, string $verb, ?string $metadataPrefix = null): void
     {
         $requestUrl = sprintf('%s?verb=%s', $baseUrl, $verb);
+
+        if ($metadataPrefix) {
+            $requestUrl = sprintf('%s&metadataPrefix=%s', $requestUrl, $metadataPrefix);
+        }
 
         $response = $this->get($requestUrl);
         // Strip the get params for assertions to follow
@@ -111,7 +115,7 @@ class OaiControllerTest extends FunctionalTest
         return [
             ['/api/v1/oai', 'Identify'],
             ['/api/v1/oai', 'ListMetadataFormats'],
-            ['/api/v1/oai', 'ListRecords'],
+            ['/api/v1/oai', 'ListRecords', 'oai_dc'],
         ];
     }
 

@@ -2,12 +2,12 @@
 
 namespace Terraformers\OpenArchive\Tests\Jobs;
 
-use Terraformers\OpenArchive\Tests\Mocks\SiteTreeExtension;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Dev\SapphireTest;
 use Terraformers\OpenArchive\Extensions\VersionedOaiRecordManager;
 use Terraformers\OpenArchive\Jobs\OaiRecordUpdateJob;
 use Terraformers\OpenArchive\Models\OaiRecord;
+use Terraformers\OpenArchive\Tests\Mocks\SiteTreeExtension;
 
 class OaiRecordUpdateJobTest extends SapphireTest
 {

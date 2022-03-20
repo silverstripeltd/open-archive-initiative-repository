@@ -2,10 +2,10 @@
 
 namespace Terraformers\OpenArchive\Formatters;
 
+use DOMDocument;
 use DOMElement;
 use SilverStripe\Control\Director;
 use Terraformers\OpenArchive\Models\OaiRecord;
-use DOMDocument;
 
 class OaiDcFormatter extends OaiRecordFormatter
 {

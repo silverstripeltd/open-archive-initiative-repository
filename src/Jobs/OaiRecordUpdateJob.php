@@ -43,6 +43,7 @@ class OaiRecordUpdateJob extends AbstractQueuedJob implements QueuedJob
     {
         // Fetch our DataObject from a LIVE context. This covers us for when Versioned DataObjects have been unpublished
         // but not archived. From the p.o.v. of our OAI feed, unpublished is still a "Deleted" state
+        /** @var DataObject $dataObject */
         $dataObject = Versioned::withVersionedMode(function (): ?DataObject {
             Versioned::set_stage(Versioned::LIVE);
 
@@ -52,6 +53,14 @@ class OaiRecordUpdateJob extends AbstractQueuedJob implements QueuedJob
         // The DataObject is not currently available in a LIVE context, so the corresponding OaiRecord should be marked
         // as deleted
         if (!$dataObject || !$dataObject->exists()) {
+            $this->markOaiRecordDeleted();
+            $this->isComplete = true;
+
+            return;
+        }
+
+        // Extension point for DataObjects to determine whether they should be able to update OaiRecords
+        if (in_array(false, $dataObject->extend('canUpdateOaiRecord'), true)) {
             $this->markOaiRecordDeleted();
             $this->isComplete = true;
 

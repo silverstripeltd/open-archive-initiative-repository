@@ -2,11 +2,13 @@
 
 namespace Terraformers\OpenArchive\Tests\Jobs;
 
+use SilverStripe\Assets\File;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Dev\SapphireTest;
 use Terraformers\OpenArchive\Extensions\VersionedOaiRecordManager;
 use Terraformers\OpenArchive\Jobs\OaiRecordUpdateJob;
 use Terraformers\OpenArchive\Models\OaiRecord;
+use Terraformers\OpenArchive\Tests\Mocks\FileExtension;
 use Terraformers\OpenArchive\Tests\Mocks\SiteTreeExtension;
 
 class OaiRecordUpdateJobTest extends SapphireTest
@@ -22,6 +24,10 @@ class OaiRecordUpdateJobTest extends SapphireTest
         SiteTree::class => [
             VersionedOaiRecordManager::class,
             SiteTreeExtension::class,
+        ],
+        File::class => [
+            VersionedOaiRecordManager::class,
+            FileExtension::class,
         ],
     ];
 
@@ -76,6 +82,54 @@ class OaiRecordUpdateJobTest extends SapphireTest
         $this->assertEquals(sprintf('subject1,subject2,%s', $finalTitle), $oaiRecord->Subjects);
         $this->assertEquals($finalTitle, $oaiRecord->Title);
         $this->assertEquals(sprintf('type1,type2,%s', $finalTitle), $oaiRecord->Types);
+    }
+
+    public function testCanUpdateOaiRecord(): void
+    {
+        /** @var SiteTree|VersionedOaiRecordManager $file */
+        $file = $this->objFromFixture(File::class, 'file1');
+        $file->setFromLocalFile(dirname(__FILE__) . '/../Mocks/file.pdf');
+        $file->write();
+
+        // Make sure the File is published
+        $file->publishRecursive();
+
+        // Check that we're set up correctly before we kick off
+        $this->assertCount(0, $file->OaiRecords());
+
+        // Kick off our Job, which should create the OaiRecord associated with our file
+        $job = OaiRecordUpdateJob::create();
+        $job->hydrate($file->ClassName, $file->ID);
+        $job->process();
+
+        // Check that we have 1 OaiRecord at the end of our process
+        $this->assertCount(1, $file->OaiRecords());
+
+        /** @var OaiRecord $oaiRecord */
+        $oaiRecord = $file->OaiRecords()->first();
+
+        // And check that the OaiRecord is marked as active
+        $this->assertEquals(0, $oaiRecord->Deleted);
+
+        // The extension we have applied should mark this record as "not being able to be updated" when the Title is
+        // set to DeleteMe
+        $file->Title = 'DeleteMe';
+        $file->write();
+        $file->publishRecursive();
+
+        // Kick off our Job, which update the OaiRecord to deleted
+        $job = OaiRecordUpdateJob::create();
+        $job->hydrate($file->ClassName, $file->ID);
+        $job->process();
+
+        // Check that we always have only 1 OaiRecord at the end of our process
+        $this->assertCount(1, $file->OaiRecords());
+
+        /** @var OaiRecord $oaiRecord */
+        $oaiRecord = $file->OaiRecords()->first();
+
+        // Check that the OaiRecord is now marked as deleted
+        $this->assertEquals(1, $oaiRecord->Deleted);
     }
 
     public function testMarkOaiRecordUnpublished(): void

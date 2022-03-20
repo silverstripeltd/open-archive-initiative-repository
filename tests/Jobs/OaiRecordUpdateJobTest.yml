@@ -1,3 +1,7 @@
+SilverStripe\Assets\File:
+  file1:
+    Title: File1
+
 SilverStripe\CMS\Model\SiteTree:
   page1:
     Title: Page1

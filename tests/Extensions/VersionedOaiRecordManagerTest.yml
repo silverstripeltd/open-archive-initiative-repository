@@ -1,0 +1,13 @@
+Terraformers\OpenArchive\Tests\Mocks\VersionedFakeDataObject:
+  object1:
+    Title: Object1
+  object2:
+    Title: Object2
+  object3:
+    Title: Object3
+  object4:
+    Title: Object4
+  object5:
+    Title: Object5
+  object6:
+    Title: Object6

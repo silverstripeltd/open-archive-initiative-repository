@@ -2,21 +2,32 @@
 
 namespace Terraformers\OpenArchive\Controllers;
 
+use Exception;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Environment;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\SiteConfig\SiteConfig;
 use Terraformers\OpenArchive\Documents\Errors\BadVerbDocument;
+use Terraformers\OpenArchive\Documents\Errors\CannotDisseminateFormatDocument;
 use Terraformers\OpenArchive\Documents\IdentifyDocument;
 use Terraformers\OpenArchive\Documents\ListMetadataFormatsDocument;
 use Terraformers\OpenArchive\Documents\ListRecordsDocument;
 use Terraformers\OpenArchive\Documents\OaiDocument;
+use Terraformers\OpenArchive\Formatters\OaiDcFormatter;
+use Terraformers\OpenArchive\Formatters\OaiRecordFormatter;
+use Terraformers\OpenArchive\Models\OaiRecord;
 
 class OaiController extends Controller
 {
+
+    public const DELETED_SUPPORT_NO = 'no';
+    public const DELETED_SUPPORT_PERSISTENT = 'persistent';
+    public const DELETED_SUPPORT_TRANSIENT = 'transient';
 
     /**
      * Environment Variable that you should set for whatever you would like the admin email to be
@@ -40,9 +51,13 @@ class OaiController extends Controller
         OaiDocument::VERB_LIST_RECORDS,
     ];
 
+    private static array $supported_formats = [
+        'oai_dc' => OaiDcFormatter::class,
+    ];
+
     private static string $supportedProtocol = '2.0';
 
-    private static string $supportedDeletedRecord = 'persistent';
+    private static string $supportedDeletedRecord = self::DELETED_SUPPORT_PERSISTENT;
 
     private static string $supportedGranularity = 'YYYY-MM-DDThh:mm:ssZ';
 
@@ -76,8 +91,21 @@ class OaiController extends Controller
         return $this->getResponse();
     }
 
+    protected function CannotDisseminateFormatResponse(HTTPRequest $request): HTTPResponse
+    {
+        $requestUrl = sprintf('%s%s', Director::absoluteBaseURL(), $request->getURL());
+
+        $xmlDocument = CannotDisseminateFormatDocument::create();
+        $xmlDocument->setResponseDate();
+        $xmlDocument->setRequestUrl($requestUrl);
+
+        $this->getResponse()->setBody($xmlDocument->getDocumentBody());
+
+        return $this->getResponse();
+    }
+
     /**
-     * This method has not been implemented yet. Atm it just returns an incredibly basic response with the Verb set
+     * The Identify verb contains important information about this data repository
      */
     protected function Identify(HTTPRequest $request): HTTPResponse
     {
@@ -102,7 +130,7 @@ class OaiController extends Controller
         // Repository Name defaults to the Site name. Extension point is provided in this method
         $xmlDocument->setRepositoryName($this->getRepositoryName());
         // Domain can be edited through extension points provided. IDs are always just a number
-        $xmlDocument->setOaiIdentifier($this->getDomain($request), 1);
+        $xmlDocument->setOaiIdentifier(Director::host(), 1);
 
         $this->getResponse()->setBody($xmlDocument->getDocumentBody());
 
@@ -127,20 +155,56 @@ class OaiController extends Controller
     }
 
     /**
-     * This method has not been implemented yet. Atm it just returns an incredibly basic response with the Verb set
+     * Supported arguments
+     * - metadataPrefix
+     *
+     * Upcoming supported arguments
+     * - from
+     * - until
+     * - set
+     * - resumptionToken
      */
     protected function ListRecords(HTTPRequest $request): HTTPResponse
     {
-        $requestUrl = sprintf('%s%s', Director::absoluteBaseURL(), $request->getURL());
+        // The metadataPrefix that records will be output in. Should match to one of our supported_formats
+        $metadataPrefix = $request->getVar('metadataPrefix');
 
-        $xmlDocument = ListRecordsDocument::create();
-        $xmlDocument->setResponseDate();
-        $xmlDocument->setRequestUrl($requestUrl);
-        $xmlDocument->setRequestSpec('oai_dc');
+        if (!$metadataPrefix || !array_key_exists($metadataPrefix, $this->config()->get('supported_formats'))) {
+            return $this->CannotDisseminateFormatResponse($request);
+        }
+
+        // The lower bound for selective harvesting
+        $from = $request->getVar('from');
+        // The upper bound for selective harvesting
+        $until = $request->getVar('until');
+        // Specifies the Set for selective harvesting
+        $set = (int) $request->getVar('set');
+        // An encoded string containing pagination requirements for selective harvesting
+        $resumptionToken = $request->getVar('resumptionToken');
+
+        $oaiRecords = $this->fetchOaiRecords($from, $until, $set, $resumptionToken);
+
+        // The OaiRecord formatter that we're going to use
+        $xmlDocument = ListRecordsDocument::create($this->getOaiRecordFormatter($metadataPrefix));
+        // Response Date defaults to the time of the Request. Extension point is provided in this method
+        $xmlDocument->setResponseDate($this->getResponseDate());
+        // Request URL defaults to the current URL. Extension point is provided in this method
+        $xmlDocument->setRequestUrl($this->getRequestUrl($request));
+        // Start processing whatever OaiRecords we found
+        $xmlDocument->processOaiRecords($oaiRecords);
 
         $this->getResponse()->setBody($xmlDocument->getDocumentBody());
 
         return $this->getResponse();
+    }
+
+    protected function getOaiRecordFormatter(string $metadataPrefix): OaiRecordFormatter
+    {
+        if (!array_key_exists($metadataPrefix, $this->config()->get('supported_formats'))) {
+            throw new Exception(sprintf('Unsupported metadate prefix provided: %s', $metadataPrefix));
+        }
+
+        return Injector::inst()->create($this->config()->get('supported_formats')[$metadataPrefix]);
     }
 
     protected function getRequestUrl(HTTPRequest $request): string
@@ -188,13 +252,36 @@ class OaiController extends Controller
         return $repositoryName;
     }
 
-    protected function getDomain(HTTPRequest $request): string
-    {
-        $domain = Director::host($request);
+    protected function fetchOaiRecords(
+        ?string $from = null,
+        ?string $until = null,
+        ?int $set = null,
+        ?string $resumptionToken = null
+    ): DataList {
+        $filters = [];
 
-        $this->extend('updateOaiDomain', $domain);
+        // Filter support still to be tested
+        if ($from) {
+            $filters['LastEdited:GreaterThanOrEqual'] = $from;
+        }
 
-        return $domain;
+        if ($until) {
+            $filters['LastEdited:LessThanOrEqual'] = $until;
+        }
+
+        if ($set) {
+            // Set support to be added
+        }
+
+        if ($resumptionToken) {
+            // Resumption token support to be added
+        }
+
+        if (!$filters) {
+            return OaiRecord::get();
+        }
+
+        return OaiRecord::get()->filter($filters);
     }
 
 }

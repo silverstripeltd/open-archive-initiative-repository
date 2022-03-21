@@ -1,0 +1,8 @@
+Terraformers\OpenArchive\Models\OaiMember:
+  member1:
+    FirstName: Test1
+    Surname: Person1
+  member2:
+    FirstName: Test1
+  member3:
+    Surname: Person1

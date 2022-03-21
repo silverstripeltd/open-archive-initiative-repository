@@ -122,6 +122,12 @@ abstract class OaiDocument
         $requestElement->setAttribute('verb', $verb);
     }
 
+    public function setMetadataPrefix(string $metadataPrefix): void
+    {
+        $requestElement = $this->findOrCreateElement('request');
+        $requestElement->setAttribute('metadataPrefix', $metadataPrefix);
+    }
+
     public function addError(string $errorCode): void
     {
         // Check that the error code is one that is supported by the OAI spec

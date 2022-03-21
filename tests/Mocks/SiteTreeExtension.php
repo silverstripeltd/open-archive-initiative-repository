@@ -55,7 +55,15 @@ class SiteTreeExtension extends DataExtension
 
     public function getRights(): string
     {
-        return 'RightsValue';
+        // Two hardcoded values plus one dynamic so that we can check it changes
+        return implode(
+            ',',
+            [
+                'rights1',
+                'rights2',
+                $this->owner->Title,
+            ]
+        );
     }
 
     public function getSource(): string

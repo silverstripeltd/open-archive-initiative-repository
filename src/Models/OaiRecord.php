@@ -19,7 +19,7 @@ use Terraformers\OpenArchive\Models\Relationships\OaiRecordOaiSet;
  * @property string $RecordClass
  * @property int $RecordID
  * @property string $Relation
- * @property string $Rights
+ * @property string $Rights CSV. Separator = ",", Enclosure = '"', Escape = "\\"
  * @property string $Source
  * @property string $Subjects CSV. Separator = ",", Enclosure = '"', Escape = "\\"
  * @property string $Title

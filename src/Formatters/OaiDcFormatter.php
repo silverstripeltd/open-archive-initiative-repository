@@ -20,13 +20,14 @@ class OaiDcFormatter extends OaiRecordFormatter
         OaiRecord $oaiRecord,
         bool $includeMetadata = false
     ): DOMElement {
+        $identifier = $this->getIdentifier($oaiRecord);
         $rootElement = $document->createElement('record');
         $headerElement = $document->createElement('header');
 
         $rootElement->appendChild($headerElement);
 
         $identifierField = $document->createElement('identifier');
-        $identifierField->nodeValue = $this->getIdentifier($oaiRecord);
+        $identifierField->nodeValue = $identifier;
 
         $headerElement->appendChild($identifierField);
 
@@ -90,13 +91,33 @@ class OaiDcFormatter extends OaiRecordFormatter
             }
         }
 
+        // Special case for Rights as they are stored in CSV format
+        if ($oaiRecord->{OaiRecord::FIELD_RIGHTS}) {
+            // We want one Element per subject
+            foreach (str_getcsv($oaiRecord->{OaiRecord::FIELD_RIGHTS}) as $type) {
+                $element = $document->createElement('dc:rights');
+                $element->nodeValue = $type;
+
+                $oaiElement->appendChild($element);
+            }
+        }
+
+        $dateElement = $document->createElement('dc:date');
+        $dateElement->nodeValue = date('Y-m-d\Th:i:s\Z', strtotime($oaiRecord->LastEdited));
+
+        $oaiElement->appendChild($dateElement);
+
+        $identifierField = $document->createElement('dc:identifier');
+        $identifierField->nodeValue = $identifier;
+
+        $oaiElement->appendChild($identifierField);
+
         $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:coverage', OaiRecord::FIELD_COVERAGE);
         $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:description', OaiRecord::FIELD_DESCRIPTION);
         $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:format', OaiRecord::FIELD_FORMAT);
         $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:language', OaiRecord::FIELD_LANGUAGE);
         $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:publisher', OaiRecord::FIELD_PUBLISHER);
         $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:relation', OaiRecord::FIELD_RELATION);
-        $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:rights', OaiRecord::FIELD_RIGHTS);
         $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:source', OaiRecord::FIELD_SOURCE);
         $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:title', OaiRecord::FIELD_TITLE);
 

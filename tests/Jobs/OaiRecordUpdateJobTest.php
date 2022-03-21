@@ -50,7 +50,9 @@ class OaiRecordUpdateJobTest extends SapphireTest
             $oaiRecord = $page->OaiRecords()->first();
 
             $this->assertEquals($page->Title, $oaiRecord->Title);
+            $this->assertEquals(sprintf('rights1,rights2,%s', $page->Title), $oaiRecord->Rights);
             $this->assertEquals(sprintf('subject1,subject2,%s', $page->Title), $oaiRecord->Subjects);
+            $this->assertEquals(sprintf('type1,type2,%s', $page->Title), $oaiRecord->Types);
         }
 
         // Start modifying our page
@@ -77,7 +79,7 @@ class OaiRecordUpdateJobTest extends SapphireTest
         $this->assertEquals('LanguageValue', $oaiRecord->Language);
         $this->assertEquals('PublisherValue', $oaiRecord->Publisher);
         $this->assertEquals('RelationValue', $oaiRecord->Relation);
-        $this->assertEquals('RightsValue', $oaiRecord->Rights);
+        $this->assertEquals(sprintf('rights1,rights2,%s', $finalTitle), $oaiRecord->Rights);
         $this->assertEquals('SourceValue', $oaiRecord->Source);
         $this->assertEquals(sprintf('subject1,subject2,%s', $finalTitle), $oaiRecord->Subjects);
         $this->assertEquals($finalTitle, $oaiRecord->Title);

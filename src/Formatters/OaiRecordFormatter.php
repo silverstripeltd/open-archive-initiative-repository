@@ -14,6 +14,10 @@ abstract class OaiRecordFormatter
 
     abstract public function getMetadataPrefix(): string;
 
+    /**
+     * The active DOMDocument must be passed to our Formatter. DOMElements must be created through the DOMDocument
+     * if we want them to be editable (eg: have the ability to have child elements appended)
+     */
     abstract public function generateDomElement(
         DOMDocument $document,
         OaiRecord $oaiRecord,

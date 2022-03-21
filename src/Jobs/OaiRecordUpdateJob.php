@@ -2,6 +2,7 @@
 
 namespace Terraformers\OpenArchive\Jobs;
 
+use Exception;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
@@ -84,8 +85,18 @@ class OaiRecordUpdateJob extends AbstractQueuedJob implements QueuedJob
 
         $oaiFields = $dataObject->config()->get('oai_fields');
 
+        $errors = [];
+
         foreach ($oaiFields as $oaiField => $dataObjectField) {
+            if (!in_array($oaiField, OaiRecord::MANAGED_FIELDS, true)) {
+                $errors[] = sprintf('Unsupported OAI field provided: %s', $oaiField);
+            }
+
             $oaiRecord->{$oaiField} = $dataObject->relField($dataObjectField);
+        }
+
+        if ($errors) {
+            throw new Exception(implode("\r\n", $errors));
         }
 
         // This record could have been previously deleted and now restored

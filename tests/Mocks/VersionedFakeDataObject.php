@@ -2,6 +2,7 @@
 
 namespace Terraformers\OpenArchive\Tests\Mocks;
 
+use SilverStripe\Dev\TestOnly;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
 use Terraformers\OpenArchive\Extensions\VersionedOaiRecordManager;
@@ -11,7 +12,7 @@ use Terraformers\OpenArchive\Extensions\VersionedOaiRecordManager;
  * @mixin VersionedOaiRecordManager
  * @mixin Versioned
  */
-class VersionedFakeDataObject extends DataObject
+class VersionedFakeDataObject extends DataObject implements TestOnly
 {
 
     private static string $table_name = 'VersionedFakeDataObject';

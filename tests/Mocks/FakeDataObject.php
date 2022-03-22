@@ -2,6 +2,7 @@
 
 namespace Terraformers\OpenArchive\Tests\Mocks;
 
+use SilverStripe\Dev\TestOnly;
 use SilverStripe\ORM\DataObject;
 use Terraformers\OpenArchive\Extensions\OaiRecordManager;
 
@@ -9,7 +10,7 @@ use Terraformers\OpenArchive\Extensions\OaiRecordManager;
  * @property string $Title
  * @mixin OaiRecordManager
  */
-class FakeDataObject extends DataObject
+class FakeDataObject extends DataObject implements TestOnly
 {
 
     private static string $table_name = 'FakeDataObject';

@@ -23,33 +23,33 @@ SilverStripe\CMS\Model\SiteTree:
 
 Terraformers\OpenArchive\Models\OaiRecord:
   record1:
-    Title: Page1
+    Titles: Page1
     Rights: rights1,rights2,Page1
     Subjects: subject1,subject2,Page1
     Types: type1,type2,Page1
     Record: =>SilverStripe\CMS\Model\SiteTree.page1
   # record2 and record3 test an invalid state where we have multiple OaiRecords for one DataObject
   record2:
-    Title: Page2
+    Titles: Page2
     Rights: rights1,rights2,Page2
     Subjects: subject1,subject2,Page2
     Types: type1,type2,Page2
     Record: =>SilverStripe\CMS\Model\SiteTree.page2
   record3:
-    Title: Page2
+    Titles: Page2
     Rights: rights1,rights2,Page2
     Subjects: subject1,subject2,Page2
     Types: type1,type2,Page2
     Record: =>SilverStripe\CMS\Model\SiteTree.page2
   record4:
-    Title: Page4
+    Titles: Page4
     Rights: rights1,rights2,Page4
     Subjects: subject1,subject2,Page4
     Types: type1,type2,Page4
     Record: =>SilverStripe\CMS\Model\SiteTree.page4
   # record5 here to test marking an OaiRecord as deleted when the corresponding DataObject is not available
   record5:
-    Title: Page5
+    Titles: Page5
     Rights: rights1,rights2,Page5
     Subjects: subject1,subject2,Page5
     Types: type1,type2,Page5

@@ -49,7 +49,7 @@ class OaiRecordUpdateJobTest extends SapphireTest
             /** @var OaiRecord $oaiRecord */
             $oaiRecord = $page->OaiRecords()->first();
 
-            $this->assertEquals($page->Title, $oaiRecord->Title);
+            $this->assertEquals($page->Title, $oaiRecord->Titles);
             $this->assertEquals(sprintf('rights1,rights2,%s', $page->Title), $oaiRecord->Rights);
             $this->assertEquals(sprintf('subject1,subject2,%s', $page->Title), $oaiRecord->Subjects);
             $this->assertEquals(sprintf('type1,type2,%s', $page->Title), $oaiRecord->Types);
@@ -73,16 +73,16 @@ class OaiRecordUpdateJobTest extends SapphireTest
 
         // Check that each value set on our OaiRecord is as expected
         $this->assertEquals(0, $oaiRecord->Deleted);
-        $this->assertEquals('CoverageValue', $oaiRecord->Coverage);
-        $this->assertEquals('DescriptionValue', $oaiRecord->Description);
-        $this->assertEquals('FormatValue', $oaiRecord->Format);
-        $this->assertEquals('LanguageValue', $oaiRecord->Language);
-        $this->assertEquals('PublisherValue', $oaiRecord->Publisher);
-        $this->assertEquals('RelationValue', $oaiRecord->Relation);
+        $this->assertEquals('CoverageValue', $oaiRecord->Coverages);
+        $this->assertEquals('DescriptionValue', $oaiRecord->Descriptions);
+        $this->assertEquals('FormatValue', $oaiRecord->Formats);
+        $this->assertEquals('LanguageValue', $oaiRecord->Languages);
+        $this->assertEquals('PublisherValue', $oaiRecord->Publishers);
+        $this->assertEquals('RelationValue', $oaiRecord->Relations);
         $this->assertEquals(sprintf('rights1,rights2,%s', $finalTitle), $oaiRecord->Rights);
-        $this->assertEquals('SourceValue', $oaiRecord->Source);
+        $this->assertEquals('SourceValue', $oaiRecord->Sources);
         $this->assertEquals(sprintf('subject1,subject2,%s', $finalTitle), $oaiRecord->Subjects);
-        $this->assertEquals($finalTitle, $oaiRecord->Title);
+        $this->assertEquals($finalTitle, $oaiRecord->Titles);
         $this->assertEquals(sprintf('type1,type2,%s', $finalTitle), $oaiRecord->Types);
     }
 

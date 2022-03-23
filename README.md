@@ -107,20 +107,25 @@ All updates for `OaiRecords` are performed through Queued Jobs. Please see the d
 This modules makes no assumptions about how you wish to populate OAI Record data. As such, you need to specify how your
 `DataObjects` are going to map to the expected OAI fields.
 
-You can have a look in `OaiRecord` for a list of available fields.
+You can have a look in `OaiRecord` for a list of MANAGED_FIELDS fields. All of which support you adding CSV values for
+when you need to have multiple of one field.
 
-When configuring your field mappings, the key should map to the Oai field, and the value can map to a property or
-method in your class. We use `relField()` to fetch from your class, so you can use any value that this framework method
-supports.
+A note on CSV parsing: If you're anticipating that some of your properties could contain commas, then you might instead
+need to map to a method that appropriately wraps your property value in quotes. See OaiRecord for the supported
+enclosure.
+
+When configuring your field mappings, the array key should map to the Oai field, and the value can map to a property or
+method in your class. We use `relField()` to fetch from your class, so you can use any mapping that this framework
+method supports.
 
 Configure `oai_fields` in your class:
 ```php
 private static array $oai_fields = [
-    // Key = the OAI field name
-    // Value = the Title field on your model
+    // Key = the OAI field name (Title)
+    // Value = a property on your model (Title)
     'Title' => 'Title',
-    // Key = the OAI field name
-    // Value = a method in your model called getDescription
+    // Key = the OAI field name (Description)
+    // Value = a method in your model (getDescription)
     'Description' => 'getDescription',
 ];
 ```

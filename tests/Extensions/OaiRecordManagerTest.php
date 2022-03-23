@@ -9,6 +9,7 @@ use Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\OpenArchive\Jobs\OaiRecordUpdateJob;
 use Terraformers\OpenArchive\Tests\Mocks\FakeDataObject;
+use Terraformers\OpenArchive\Tests\Mocks\FakeDataObjectNoUpdate;
 
 class OaiRecordManagerTest extends SapphireTest
 {
@@ -21,12 +22,13 @@ class OaiRecordManagerTest extends SapphireTest
      */
     protected static $extra_dataobjects = [
         FakeDataObject::class,
+        FakeDataObjectNoUpdate::class,
     ];
 
     /**
-     * @dataProvider triggerActionProvider
+     * @dataProvider triggerOaiRecordUpdate
      */
-    public function testTriggerAction(string $fixtureId, string $action): void
+    public function testTriggerOaiRecordUpdate(string $fixtureId, string $action): void
     {
         // Double check that we're set up correctly with no Jobs currently queued
         $this->assertCount(0, QueuedJobDescriptor::get());
@@ -49,7 +51,24 @@ class OaiRecordManagerTest extends SapphireTest
         $this->assertStringContainsString(sprintf('"id";i:%s;', $id), $queuedJob->SavedJobData);
     }
 
-    public function triggerActionProvider(): array
+    public function testNoTriggerOaiRecordUpdate(): void
+    {
+        // Double check that we're set up correctly with no Jobs currently queued
+        $this->assertCount(0, QueuedJobDescriptor::get());
+
+        // Kick things off
+        $dataObject = $this->objFromFixture(FakeDataObjectNoUpdate::class, 'object1');
+        $dataObject->Title = 'Object1Edit';
+        $id = $dataObject->ID;
+
+        // This should trigger a Job to be queued
+        $dataObject->write();
+
+        // There should still be no jobs, as this DataObject said it can't update OaiRecords
+        $this->assertCount(0, QueuedJobDescriptor::get());
+    }
+
+    public function triggerOaiRecordUpdate(): array
     {
         return [
             ['object1', 'write'],

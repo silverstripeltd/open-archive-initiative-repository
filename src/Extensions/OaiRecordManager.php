@@ -44,6 +44,10 @@ class OaiRecordManager extends DataExtension
      */
     public function triggerOaiRecordUpdate(): void
     {
+        if (in_array(false, $this->owner->invokeWithExtensions('canUpdateOaiRecord'), true)) {
+            return;
+        }
+
         $job = OaiRecordUpdateJob::create();
         $job->hydrate($this->owner->ClassName, $this->owner->ID);
 

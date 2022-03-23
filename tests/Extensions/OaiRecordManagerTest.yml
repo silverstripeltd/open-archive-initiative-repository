@@ -3,3 +3,7 @@ Terraformers\OpenArchive\Tests\Mocks\FakeDataObject:
     Title: Object1
   object2:
     Title: Object1
+
+Terraformers\OpenArchive\Tests\Mocks\FakeDataObjectNoUpdate:
+  object1:
+    Title: Object1

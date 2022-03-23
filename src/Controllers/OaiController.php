@@ -147,7 +147,12 @@ class OaiController extends Controller
         $xmlDocument = ListMetadataFormatsDocument::create();
         $xmlDocument->setResponseDate();
         $xmlDocument->setRequestUrl($requestUrl);
-        $xmlDocument->setRequestSpec('oai_dc');
+
+        foreach (array_keys($this->config()->get('supported_formats')) as $metadataPrefix) {
+            $formatter = $this->getOaiRecordFormatter($metadataPrefix);
+
+            $xmlDocument->addSupportedFormatter($formatter);
+        }
 
         $this->getResponse()->setBody($xmlDocument->getDocumentBody());
 

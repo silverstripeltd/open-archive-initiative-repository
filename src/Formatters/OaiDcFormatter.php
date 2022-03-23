@@ -52,6 +52,16 @@ class OaiDcFormatter extends OaiRecordFormatter
         return 'oai_dc';
     }
 
+    public function getMetadataNamespaceUrl(): string
+    {
+        return 'http://www.openarchives.org/OAI/2.0/oai_dc/';
+    }
+
+    public function getSchemaUrl(): string
+    {
+        return 'http://www.openarchives.org/OAI/2.0/oai_dc.xsd';
+    }
+
     public function generateDomElement(
         DOMDocument $document,
         OaiRecord $oaiRecord,
@@ -97,11 +107,11 @@ class OaiDcFormatter extends OaiRecordFormatter
 
         $oaiElement = $document->createElement('oai_dc:dc');
         $oaiElement->setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-        $oaiElement->setAttribute('xmlns:oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc/');
+        $oaiElement->setAttribute('xmlns:oai_dc', $this->getMetadataNamespaceUrl());
         $oaiElement->setAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/');
         $oaiElement->setAttribute(
             'xsi:schemaLocation',
-            'http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd'
+            sprintf('%s %s', $this->getMetadataNamespaceUrl(), $this->getSchemaUrl())
         );
 
         $metadataElement->appendChild($oaiElement);

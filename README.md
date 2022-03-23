@@ -100,7 +100,7 @@ Managers is to control when we trigger updates on OAI Records for our `DataObjec
 Using the incorrect Manager for your `DataObject` might result in OAI Records updating at unexpected times.
 
 All updates for `OaiRecords` are performed through Queued Jobs. Please see the docblock above
-`OaiRecordManager::triggerUpdate()` for the rationale behind using Queued Jobs.
+`OaiRecordManager::triggerOaiRecordUpdate()` for the rationale behind using Queued Jobs.
 
 ### OAI fields
 

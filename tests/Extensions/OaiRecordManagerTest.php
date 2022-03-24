@@ -59,7 +59,6 @@ class OaiRecordManagerTest extends SapphireTest
         // Kick things off
         $dataObject = $this->objFromFixture(FakeDataObjectNoUpdate::class, 'object1');
         $dataObject->Title = 'Object1Edit';
-        $id = $dataObject->ID;
 
         // This should trigger a Job to be queued
         $dataObject->write();

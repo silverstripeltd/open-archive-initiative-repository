@@ -10,6 +10,43 @@ use Terraformers\OpenArchive\Models\OaiRecord;
 class OaiDcFormatter extends OaiRecordFormatter
 {
 
+    private const FIELD_HEADER_DATESTAMP = 'datestamp';
+    private const FIELD_HEADER_IDENTIFIER = 'identifier';
+    private const FIELD_HEADER_SET_SPEC = 'setSpec';
+    private const FIELD_HEADER_STATUS = 'status';
+
+    private const FIELD_CONTRIBUTOR = 'dc:contributor';
+    private const FIELD_COVERAGE = 'dc:coverage';
+    private const FIELD_CREATOR = 'dc:creator';
+    private const FIELD_DATE = 'dc:date';
+    private const FIELD_DESCRIPTION = 'dc:description';
+    private const FIELD_FORMAT = 'dc:format';
+    private const FIELD_IDENTIFIER = 'dc:identifier';
+    private const FIELD_LANGUAGE = 'dc:language';
+    private const FIELD_PUBLISHER = 'dc:publisher';
+    private const FIELD_RELATION = 'dc:relation';
+    private const FIELD_RIGHT = 'dc:rights';
+    private const FIELD_SOURCE = 'dc:source';
+    private const FIELD_SUBJECT = 'dc:subject';
+    private const FIELD_TITLE = 'dc:title';
+    private const FIELD_TYPE = 'dc:type';
+
+    private const MANAGED_FIELDS = [
+        self::FIELD_CONTRIBUTOR => OaiRecord::FIELD_CONTRIBUTORS,
+        self::FIELD_COVERAGE => OaiRecord::FIELD_COVERAGES,
+        self::FIELD_CREATOR => OaiRecord::FIELD_CREATORS,
+        self::FIELD_DESCRIPTION => OaiRecord::FIELD_DESCRIPTIONS,
+        self::FIELD_FORMAT => OaiRecord::FIELD_FORMATS,
+        self::FIELD_LANGUAGE => OaiRecord::FIELD_LANGUAGES,
+        self::FIELD_PUBLISHER => OaiRecord::FIELD_PUBLISHERS,
+        self::FIELD_RELATION => OaiRecord::FIELD_RELATIONS,
+        self::FIELD_RIGHT => OaiRecord::FIELD_RIGHTS,
+        self::FIELD_SOURCE => OaiRecord::FIELD_SOURCES,
+        self::FIELD_SUBJECT => OaiRecord::FIELD_SUBJECTS,
+        self::FIELD_TITLE => OaiRecord::FIELD_TITLES,
+        self::FIELD_TYPE => OaiRecord::FIELD_TYPES,
+    ];
+
     public function getMetadataPrefix(): string
     {
         return 'oai_dc';
@@ -26,25 +63,25 @@ class OaiDcFormatter extends OaiRecordFormatter
 
         $rootElement->appendChild($headerElement);
 
-        $identifierField = $document->createElement('identifier');
+        $identifierField = $document->createElement(self::FIELD_HEADER_IDENTIFIER);
         $identifierField->nodeValue = $identifier;
 
         $headerElement->appendChild($identifierField);
 
-        $datestampElement = $document->createElement('datestamp');
+        $datestampElement = $document->createElement(self::FIELD_HEADER_DATESTAMP);
         $datestampElement->nodeValue = date('Y-m-d\Th:i:s\Z', strtotime($oaiRecord->LastEdited));
 
         $headerElement->appendChild($datestampElement);
 
         foreach ($oaiRecord->OaiSets() as $oaiSet) {
-            $setElement = $document->createElement('setSpec');
+            $setElement = $document->createElement(self::FIELD_HEADER_SET_SPEC);
             $setElement->nodeValue = $oaiSet->ID;
 
             $headerElement->appendChild($setElement);
         }
 
         if ($oaiRecord->Deleted) {
-            $statusElement = $document->createElement('status');
+            $statusElement = $document->createElement(self::FIELD_HEADER_STATUS);
             $statusElement->nodeValue = 'deleted';
 
             $headerElement->appendChild($statusElement);
@@ -69,57 +106,21 @@ class OaiDcFormatter extends OaiRecordFormatter
 
         $metadataElement->appendChild($oaiElement);
 
-        // Special case for Subjects as they are stored in CSV format
-        if ($oaiRecord->{OaiRecord::FIELD_SUBJECTS}) {
-            // We want one Element per subject
-            foreach (str_getcsv($oaiRecord->{OaiRecord::FIELD_SUBJECTS}) as $subject) {
-                $element = $document->createElement('dc:subject');
-                $element->nodeValue = $subject;
-
-                $oaiElement->appendChild($element);
-            }
-        }
-
-        // Special case for Subjects as they are stored in CSV format
-        if ($oaiRecord->{OaiRecord::FIELD_TYPE}) {
-            // We want one Element per subject
-            foreach (str_getcsv($oaiRecord->{OaiRecord::FIELD_TYPE}) as $type) {
-                $element = $document->createElement('dc:type');
-                $element->nodeValue = $type;
-
-                $oaiElement->appendChild($element);
-            }
-        }
-
-        // Special case for Rights as they are stored in CSV format
-        if ($oaiRecord->{OaiRecord::FIELD_RIGHTS}) {
-            // We want one Element per subject
-            foreach (str_getcsv($oaiRecord->{OaiRecord::FIELD_RIGHTS}) as $type) {
-                $element = $document->createElement('dc:rights');
-                $element->nodeValue = $type;
-
-                $oaiElement->appendChild($element);
-            }
-        }
-
-        $dateElement = $document->createElement('dc:date');
+        // Date field needs to be set a bit more manually, as we need to reformat the date
+        $dateElement = $document->createElement(self::FIELD_DATE);
         $dateElement->nodeValue = date('Y-m-d\Th:i:s\Z', strtotime($oaiRecord->LastEdited));
 
         $oaiElement->appendChild($dateElement);
 
-        $identifierField = $document->createElement('dc:identifier');
+        // Identifier set manually with the identifier we generated above
+        $identifierField = $document->createElement(self::FIELD_IDENTIFIER);
         $identifierField->nodeValue = $identifier;
 
         $oaiElement->appendChild($identifierField);
 
-        $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:coverage', OaiRecord::FIELD_COVERAGE);
-        $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:description', OaiRecord::FIELD_DESCRIPTION);
-        $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:format', OaiRecord::FIELD_FORMAT);
-        $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:language', OaiRecord::FIELD_LANGUAGE);
-        $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:publisher', OaiRecord::FIELD_PUBLISHER);
-        $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:relation', OaiRecord::FIELD_RELATION);
-        $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:source', OaiRecord::FIELD_SOURCE);
-        $this->addMetadataElement($document, $oaiElement, $oaiRecord, 'dc:title', OaiRecord::FIELD_TITLE);
+        foreach (self::MANAGED_FIELDS as $elementName => $oaiRecordProperty) {
+            $this->addMetadataElement($document, $oaiElement, $oaiRecord, $elementName, $oaiRecordProperty);
+        }
 
         return $rootElement;
     }
@@ -136,14 +137,18 @@ class OaiDcFormatter extends OaiRecordFormatter
         string $elementName,
         string $property
     ): void {
+        // If there is no value, then there is nothing for us to add here
         if (!$oaiRecord->{$property}) {
             return;
         }
 
-        $element = $document->createElement($elementName);
-        $element->nodeValue = $oaiRecord->{$property};
+        // CSV values are supported (and expected). Parse the field value as a CSV and create one element per value
+        foreach (str_getcsv($oaiRecord->{$property}) as $subject) {
+            $element = $document->createElement($elementName);
+            $element->nodeValue = $subject;
 
-        $appendTo->appendChild($element);
+            $appendTo->appendChild($element);
+        }
     }
 
 }

@@ -19,7 +19,7 @@ class VersionedOaiRecordManager extends OaiRecordManager
 
     public function onAfterPublish(): void
     {
-        $this->triggerUpdate();
+        $this->triggerOaiRecordUpdate();
     }
 
     /**
@@ -29,7 +29,7 @@ class VersionedOaiRecordManager extends OaiRecordManager
      */
     public function onBeforeUnpublish(): void
     {
-        $this->triggerUpdate();
+        $this->triggerOaiRecordUpdate();
     }
 
 }

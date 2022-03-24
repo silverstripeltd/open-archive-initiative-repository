@@ -24,12 +24,12 @@ class OaiRecordManager extends DataExtension
 
     public function onAfterWrite(): void
     {
-        $this->triggerUpdate();
+        $this->triggerOaiRecordUpdate();
     }
 
     public function onBeforeDelete(): void
     {
-        $this->triggerUpdate();
+        $this->triggerOaiRecordUpdate();
     }
 
     /**
@@ -42,8 +42,12 @@ class OaiRecordManager extends DataExtension
      *   triggered at the same time, there is a chance (albeit small) that multiple OaiRecords end up being created. By
      *   moving this action to an asynchronous Job, we significantly reduce the likelihood of duplicate OaiRecords
      */
-    public function triggerUpdate(): void
+    public function triggerOaiRecordUpdate(): void
     {
+        if (in_array(false, $this->owner->invokeWithExtensions('canUpdateOaiRecord'), true)) {
+            return;
+        }
+
         $job = OaiRecordUpdateJob::create();
         $job->hydrate($this->owner->ClassName, $this->owner->ID);
 

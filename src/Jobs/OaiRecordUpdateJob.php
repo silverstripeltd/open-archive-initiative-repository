@@ -60,8 +60,10 @@ class OaiRecordUpdateJob extends AbstractQueuedJob implements QueuedJob
             return;
         }
 
-        // Extension point for DataObjects to determine whether they should be able to update OaiRecords
-        if (in_array(false, $dataObject->extend('canUpdateOaiRecord'), true)) {
+        // Extension point for DataObjects to determine whether they should be able to update OaiRecords. This should
+        // have been triggered during the OaiRecordManager::triggerOaiRecordUpdate() step, however, something could
+        // have happened to the DataObject since then, so we'll recheck now
+        if (in_array(false, $dataObject->invokeWithExtensions('canUpdateOaiRecord'), true)) {
             $this->markOaiRecordDeleted();
             $this->isComplete = true;
 

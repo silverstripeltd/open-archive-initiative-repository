@@ -4,6 +4,7 @@ namespace Terraformers\OpenArchive\Tests\Mocks;
 
 use SilverStripe\Assets\File;
 use SilverStripe\ORM\DataExtension;
+use Terraformers\OpenArchive\Models\OaiRecord;
 
 /**
  * @property File|$this $owner
@@ -12,7 +13,7 @@ class FileExtension extends DataExtension
 {
 
     private static array $oai_fields = [
-        'Title' => 'Title',
+        OaiRecord::FIELD_TITLES => 'Title',
     ];
 
     /**

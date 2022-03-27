@@ -74,7 +74,7 @@ class OaiRecord extends DataObject
         self::FIELD_CONTRIBUTORS => 'Varchar(255)',
         self::FIELD_COVERAGES => 'Varchar(255)',
         self::FIELD_CREATORS => 'Varchar(255)',
-        self::FIELD_DESCRIPTIONS => 'Varchar(255)',
+        self::FIELD_DESCRIPTIONS => 'Text',
         self::FIELD_DELETED => 'Boolean(0)',
         self::FIELD_FORMATS => 'Varchar(255)',
         self::FIELD_LANGUAGES => 'Varchar(255)',

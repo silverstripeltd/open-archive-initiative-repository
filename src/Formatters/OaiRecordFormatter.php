@@ -12,7 +12,20 @@ abstract class OaiRecordFormatter
 
     use Injectable;
 
+    /**
+     * Value used for the metadataPrefix field
+     */
     abstract public function getMetadataPrefix(): string;
+
+    /**
+     * Value used for the metadataNamespace field
+     */
+    abstract public function getMetadataNamespaceUrl(): string;
+
+    /**
+     * Value used for the schema field
+     */
+    abstract public function getSchemaUrl(): string;
 
     /**
      * The active DOMDocument must be passed to our Formatter. DOMElements must be created through the DOMDocument

@@ -37,6 +37,7 @@ class OaiDcFormatter extends OaiRecordFormatter
         self::FIELD_CREATOR => OaiRecord::FIELD_CREATORS,
         self::FIELD_DESCRIPTION => OaiRecord::FIELD_DESCRIPTIONS,
         self::FIELD_FORMAT => OaiRecord::FIELD_FORMATS,
+        self::FIELD_IDENTIFIER => OaiRecord::FIELD_IDENTIFIER,
         self::FIELD_LANGUAGE => OaiRecord::FIELD_LANGUAGES,
         self::FIELD_PUBLISHER => OaiRecord::FIELD_PUBLISHERS,
         self::FIELD_RELATION => OaiRecord::FIELD_RELATIONS,
@@ -121,12 +122,6 @@ class OaiDcFormatter extends OaiRecordFormatter
         $dateElement->nodeValue = date('Y-m-d\Th:i:s\Z', strtotime($oaiRecord->LastEdited));
 
         $oaiElement->appendChild($dateElement);
-
-        // Identifier set manually with the identifier we generated above
-        $identifierField = $document->createElement(self::FIELD_IDENTIFIER);
-        $identifierField->nodeValue = $identifier;
-
-        $oaiElement->appendChild($identifierField);
 
         foreach (self::MANAGED_FIELDS as $elementName => $oaiRecordProperty) {
             $this->addMetadataElement($document, $oaiElement, $oaiRecord, $elementName, $oaiRecordProperty);

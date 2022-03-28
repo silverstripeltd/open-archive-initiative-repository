@@ -21,6 +21,8 @@ use Terraformers\OpenArchive\Models\Relationships\OaiRecordOaiSet;
  * @property string $Descriptions
  * @property int $Deleted
  * @property string $Formats
+ * @property string $Identifier Note: This should be a URL to the DataObject (Page, File, whatever). Not to be confused
+ * with the header Identifier (which will be automatically generated)
  * @property string $Languages
  * @property string $Publishers
  * @property string $RecordClass
@@ -43,6 +45,7 @@ class OaiRecord extends DataObject
     public const FIELD_DESCRIPTIONS = 'Descriptions';
     public const FIELD_DELETED = 'Deleted';
     public const FIELD_FORMATS = 'Formats';
+    public const FIELD_IDENTIFIER = 'Identifier';
     public const FIELD_LANGUAGES = 'Languages';
     public const FIELD_PUBLISHERS = 'Publishers';
     public const FIELD_RELATIONS = 'Relations';
@@ -58,6 +61,7 @@ class OaiRecord extends DataObject
         self::FIELD_CREATORS,
         self::FIELD_DESCRIPTIONS,
         self::FIELD_FORMATS,
+        self::FIELD_IDENTIFIER,
         self::FIELD_LANGUAGES,
         self::FIELD_PUBLISHERS,
         self::FIELD_RELATIONS,
@@ -77,6 +81,7 @@ class OaiRecord extends DataObject
         self::FIELD_DESCRIPTIONS => 'Text',
         self::FIELD_DELETED => 'Boolean(0)',
         self::FIELD_FORMATS => 'Varchar(255)',
+        self::FIELD_IDENTIFIER => 'Varchar(255)',
         self::FIELD_LANGUAGES => 'Varchar(255)',
         self::FIELD_PUBLISHERS => 'Varchar(255)',
         self::FIELD_RELATIONS => 'Varchar(255)',

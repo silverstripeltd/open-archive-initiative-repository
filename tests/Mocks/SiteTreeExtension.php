@@ -19,6 +19,7 @@ class SiteTreeExtension extends DataExtension
         OaiRecord::FIELD_COVERAGES => 'getCoverage',
         OaiRecord::FIELD_DESCRIPTIONS => 'MetaDescription',
         OaiRecord::FIELD_FORMATS => 'getFormat',
+        OaiRecord::FIELD_IDENTIFIER => 'getIdentifier',
         OaiRecord::FIELD_LANGUAGES => 'getLanguage',
         OaiRecord::FIELD_PUBLISHERS => 'getPublisher',
         OaiRecord::FIELD_RELATIONS => 'getRelation',
@@ -37,6 +38,11 @@ class SiteTreeExtension extends DataExtension
     public function getFormat(): string
     {
         return 'FormatValue';
+    }
+
+    public function getIdentifier(): string
+    {
+        return 'IdentifierValue';
     }
 
     public function getLanguage(): string

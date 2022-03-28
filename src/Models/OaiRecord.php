@@ -18,11 +18,15 @@ use Terraformers\OpenArchive\Models\Relationships\OaiRecordOaiSet;
  * @property string $Contributors
  * @property string $Coverages
  * @property string $Creators
+ * @property string $Date Note: This is the date when the related DataObject was updated. Not to be confused with the
+ * header datestamp which will be the $LastEdited value from the OAI Record (see below)
  * @property string $Descriptions
  * @property int $Deleted
  * @property string $Formats
  * @property string $Identifier Note: This should be a URL to the DataObject (Page, File, whatever). Not to be confused
  * with the header Identifier (which will be automatically generated)
+ * @property string $LastEdited Note: This is the date that we use for filtering. This represents the date in which
+ * the update *became available in the API*
  * @property string $Languages
  * @property string $Publishers
  * @property string $RecordClass
@@ -43,6 +47,7 @@ class OaiRecord extends DataObject
     public const FIELD_COVERAGES = 'Coverages';
     public const FIELD_CREATORS = 'Creators';
     public const FIELD_DESCRIPTIONS = 'Descriptions';
+    public const FIELD_DATE = 'Date';
     public const FIELD_DELETED = 'Deleted';
     public const FIELD_FORMATS = 'Formats';
     public const FIELD_IDENTIFIER = 'Identifier';
@@ -78,6 +83,7 @@ class OaiRecord extends DataObject
         self::FIELD_CONTRIBUTORS => 'Varchar(255)',
         self::FIELD_COVERAGES => 'Varchar(255)',
         self::FIELD_CREATORS => 'Varchar(255)',
+        self::FIELD_DATE => 'Datetime',
         self::FIELD_DESCRIPTIONS => 'Text',
         self::FIELD_DELETED => 'Boolean(0)',
         self::FIELD_FORMATS => 'Varchar(255)',

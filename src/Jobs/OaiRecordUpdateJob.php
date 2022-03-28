@@ -85,12 +85,14 @@ class OaiRecordUpdateJob extends AbstractQueuedJob implements QueuedJob
             $oaiRecord->RecordID = $this->id;
         }
 
+        // Start processing our managed fields
         $oaiFields = $dataObject->config()->get('oai_fields');
-
         $errors = [];
 
         foreach ($oaiFields as $oaiField => $dataObjectField) {
             if (!in_array($oaiField, OaiRecord::MANAGED_FIELDS, true)) {
+                // Don't throw immediately. Continue processing in case there are other errors that we want to tell the
+                // dev/s about
                 $errors[] = sprintf('Unsupported OAI field provided: %s', $oaiField);
             }
 
@@ -101,6 +103,8 @@ class OaiRecordUpdateJob extends AbstractQueuedJob implements QueuedJob
             throw new Exception(implode("\r\n", $errors));
         }
 
+        // The date field is not a managed field, and should always be the LastEdited date of our DataObject
+        $oaiRecord->Date = $dataObject->LastEdited;
         // This record could have been previously deleted and now restored
         $oaiRecord->Deleted = 0;
         $oaiRecord->write();

@@ -15,6 +15,7 @@
   * [OAI Record Managers](#oai-record-managers)
   * [OAI fields](#oai-fields)
 * [Routing](#routing)
+* [Populating your initial set of OAI Records](#populating-your-initial-set-of-oai-records)
 * [License](#license)
 * [Maintainers](#maintainers)
 * [Development and contribution](#development-and-contribution)
@@ -58,7 +59,7 @@ for this verb.
 
 ### List Metadata Formats
 
-TBA
+The response for this endpoint is generated based on the config you specify for `OaiController::$supported_formats`.
 
 ### List Sets
 
@@ -70,7 +71,13 @@ TBA
 
 ### List Records
 
-TBA
+This endpoint requires that the request includes a `metadataPrefix` parameter value that matches one of the configs
+that you have specified for `OaiController::$supported_formats`.
+
+The output of this endpoint is based on your current OAI Records
+
+Filter support: TBA
+Resumption tokens: TBA
 
 ### Get Record
 
@@ -158,6 +165,64 @@ After:
 SilverStripe\Control\Director:
   rules:
     'api/v1/oai': MyApp\OpenArchive\OaiController
+```
+
+## Populating your initial set of OAI Records
+
+Because the module can't know what `DataObjects` you wish to apply the `OaiRecordManager` to, we have opted **not** to
+add any dev task to populate initial `OaiRecords`. However, below is an example build task that you might adapt/own/use.
+
+In this example we have applied the `OaiRecordManager` to `Page` and `File`.
+
+```php
+<?php
+
+namespace App\Tasks;
+
+... imports
+
+class CreateInitialOaiRecords extends BuildTask
+{
+
+    private static $segment = 'create-initial-oai-records'; // phpcs:ignore
+
+    protected $title = 'Create Initial OAI Records'; // phpcs:ignore
+
+    protected $description = 'Create/update OAI Records for all Pages and Documents'; // phpcs:ignore
+
+    /**
+     * @param HTTPRequest $request
+     * @return void
+     */
+    public function run($request) // phpcs:ignore SlevomatCodingStandard.TypeHints
+    {
+        $classes = [
+            Page::class,
+            File::class,
+        ];
+
+        foreach ($classes as $class) {
+            // Set our stage to LIVE so that we only fetch DataObjects that are available on the frontend. This isn't
+            // totally necessary since the Queued Job will validate this itself, but it saves us from queueing Jobs that
+            // we know we don't need
+            /** @var DataList|OaiRecordManager[] $dataObjects */
+            $dataObjects = Versioned::withVersionedMode(static function () use ($class): DataList {
+                Versioned::set_stage(Versioned::LIVE);
+
+                return DataObject::get($class);
+            });
+
+            // Easy as, just triggerOaiRecordUpdate(). This method + the queued job will take care of the rest
+            foreach ($dataObjects as $dataObject) {
+                $dataObject->triggerOaiRecordUpdate();
+            }
+        }
+
+        echo 'Finished queueing OAI Record update Jobs';
+    }
+
+}
+
 ```
 
 ## License

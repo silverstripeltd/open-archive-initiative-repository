@@ -79,6 +79,13 @@ class OaiDcFormatter extends OaiRecordFormatter
 
         $headerElement->appendChild($identifierField);
 
+        // The header datestamp represents the date in which the update became available to the API. This can differ
+        // from the dc:date field in the metadata, which represents the date in which the associated resource was last
+        // updated
+        // Should these both be the same? No, not necessarily. datestamp is there for us to tell Harvesters that "we
+        // need you to pull this record if you haven't done so since [this date]" - it doesn't matter *why* we are
+        // requesting them to do so. The date field then indicates the date when the associated resource was last
+        // updated, and the Harvesters can do whatever they like with that
         $datestampElement = $document->createElement(self::FIELD_HEADER_DATESTAMP);
         $datestampElement->nodeValue = date('Y-m-d\Th:i:s\Z', strtotime($oaiRecord->LastEdited));
 
@@ -119,7 +126,7 @@ class OaiDcFormatter extends OaiRecordFormatter
 
         // Date field needs to be set a bit more manually, as we need to reformat the date
         $dateElement = $document->createElement(self::FIELD_DATE);
-        $dateElement->nodeValue = date('Y-m-d\Th:i:s\Z', strtotime($oaiRecord->LastEdited));
+        $dateElement->nodeValue = date('Y-m-d\Th:i:s\Z', strtotime($oaiRecord->Date));
 
         $oaiElement->appendChild($dateElement);
 

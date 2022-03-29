@@ -9,12 +9,12 @@ use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\OpenArchive\Jobs\OaiRecordUpdateJob;
 use Terraformers\OpenArchive\Models\OaiRecord;
 
-class UpdateOaiRecords extends BuildTask
+class OaiRecordsUpdateExisting extends BuildTask
 {
 
-    private static $segment = 'update-oai-records'; // phpcs:ignore
+    private static $segment = 'oai-records-update-existing'; // phpcs:ignore
 
-    protected $title = 'Update OAI Records'; // phpcs:ignore
+    protected $title = 'OAI Records - Update Existing'; // phpcs:ignore
 
     protected $description = 'Queue update jobs for all existing OAI Records'; // phpcs:ignore
 

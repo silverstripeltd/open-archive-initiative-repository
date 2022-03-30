@@ -34,19 +34,11 @@ class IdentifyDocumentTest extends SapphireTest
      * @param string $element
      * @param mixed $valueOne
      * @param mixed $valueTwo
-     * @param mixed $expectedOne
-     * @param mixed $expectedTwo
      * @return void
      * @dataProvider elementProvider
      */
-    public function testElementSetters(
-        string $method,
-        string $element,
-        $valueOne,
-        $valueTwo,
-        $expectedOne,
-        $expectedTwo
-    ): void {
+    public function testElementSetters(string $method, string $element, $valueOne, $valueTwo): void
+    {
         $document = IdentifyDocument::create();
         // Set the initial value
         $document->{$method}($valueOne);
@@ -57,14 +49,14 @@ class IdentifyDocumentTest extends SapphireTest
         $domElement = $domDocument->getElementById($element);
 
         $this->assertNotNull($domElement, sprintf('%s not found', $element));
-        $this->assertEquals($expectedOne, $domElement->nodeValue);
+        $this->assertEquals($valueOne, $domElement->nodeValue);
 
         // Set the element to a new value. Note, this should update the DOMElement that we already have instantiated
         // above
         $document->{$method}($valueTwo);
 
         // Check that the date was updated
-        $this->assertEquals($expectedTwo, $domElement->nodeValue);
+        $this->assertEquals($valueTwo, $domElement->nodeValue);
     }
 
     public function testSetOaiIdentifier(): void
@@ -117,14 +109,10 @@ class IdentifyDocumentTest extends SapphireTest
                 'repositoryName',
                 'repo1',
                 'repo2',
-                'repo1',
-                'repo2',
             ],
             [
                 'setBaseURL',
                 'baseURL',
-                'url1',
-                'url2',
                 'url1',
                 'url2',
             ],
@@ -133,22 +121,16 @@ class IdentifyDocumentTest extends SapphireTest
                 'protocolVersion',
                 1.0,
                 2.0,
-                1.0,
-                2.0,
             ],
             [
                 'setAdminEmail',
                 'adminEmail',
                 'email1@test.com',
                 'email2@test.com',
-                'email1@test.com',
-                'email2@test.com',
             ],
             [
                 'setEarliestDatestamp',
                 'earliestDatestamp',
-                0,
-                60,
                 '1970-01-01T12:00:00Z',
                 '1970-01-01T12:01:00Z',
             ],
@@ -157,14 +139,10 @@ class IdentifyDocumentTest extends SapphireTest
                 'deletedRecord',
                 'no',
                 'persistent',
-                'no',
-                'persistent',
             ],
             [
                 'setGranularity',
                 'granularity',
-                'YYYY-MM-DDThh:mm:ssZ',
-                'YYYY-MM-DDT',
                 'YYYY-MM-DDThh:mm:ssZ',
                 'YYYY-MM-DDT',
             ],

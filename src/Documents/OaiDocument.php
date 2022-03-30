@@ -7,6 +7,7 @@ use DOMElement;
 use Exception;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\FieldType\DBDatetime;
+use Terraformers\OpenArchive\Helpers\DateTimeHelper;
 
 /**
  * This abstract class provides you with a basic XML structure that every OAI response needs to follow. That being:
@@ -32,7 +33,7 @@ abstract class OaiDocument
     public const ERROR_CANNOT_DISSEMINATE_FORMAT = 'cannotDisseminateFormat';
     public const ERROR_ID_DOES_NOT_EXIST = 'idDoesNotExist';
     public const ERROR_NO_METADATA_FORMATS = 'noMetadataFormats';
-    public const ERROR_NO_RECORD_MATCH = 'noRecordsMatch';
+    public const ERROR_NO_RECORDS_MATCH = 'noRecordsMatch';
     public const ERROR_NO_SET_HIERARCHY = 'noSetHierarchy';
 
     public const VERB_IDENTIFY = 'Identify';
@@ -48,7 +49,7 @@ abstract class OaiDocument
         self::ERROR_CANNOT_DISSEMINATE_FORMAT,
         self::ERROR_ID_DOES_NOT_EXIST,
         self::ERROR_NO_METADATA_FORMATS,
-        self::ERROR_NO_RECORD_MATCH,
+        self::ERROR_NO_RECORDS_MATCH,
         self::ERROR_NO_SET_HIERARCHY,
     ];
 
@@ -82,10 +83,10 @@ abstract class OaiDocument
         return $this->document->saveXML();
     }
 
-    public function setResponseDate(?int $timestamp = null): void
+    public function setResponseDate(?string $dateString = null): void
     {
-        if ($timestamp === null) {
-            $timestamp = DBDatetime::now()->getTimestamp();
+        if (!$dateString) {
+            $dateString = DateTimeHelper::getUtcStringFromLocal(date('Y-m-d H:i:s', DBDatetime::now()->getTimestamp()));
         }
 
         // Check to see if we have an existing responseDate element (we can only have 1)
@@ -101,7 +102,7 @@ abstract class OaiDocument
         }
 
         // Set the value of our responseDate field
-        $responseDateElement->nodeValue = date('Y-m-d\Th:i:s\Z', $timestamp);
+        $responseDateElement->nodeValue = $dateString;
     }
 
     public function setRequestUrl(string $requestUrl): void
@@ -128,7 +129,7 @@ abstract class OaiDocument
         $requestElement->setAttribute('metadataPrefix', $metadataPrefix);
     }
 
-    public function addError(string $errorCode): void
+    public function addError(string $errorCode, ?string $errorMessage = null): void
     {
         // Check that the error code is one that is supported by the OAI spec
         // @see http://www.openarchives.org/OAI/openarchivesprotocol.html#ErrorConditions
@@ -140,7 +141,16 @@ abstract class OaiDocument
         $errorElement = $this->document->createElement('error');
         $errorElement->setAttribute('code', $errorCode);
 
+        if ($errorMessage) {
+            $errorElement->nodeValue = $errorMessage;
+        }
+
         $this->getRootElement()->appendChild($errorElement);
+    }
+
+    public function hasErrors(): bool
+    {
+        return (bool) $this->getRootElement()->getElementsByTagName('error')->count();
     }
 
     protected function getRootElement(): DOMElement

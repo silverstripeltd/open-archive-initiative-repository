@@ -10,7 +10,6 @@ use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataList;
-use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\SiteConfig\SiteConfig;
 use Terraformers\OpenArchive\Documents\Errors\BadVerbDocument;
 use Terraformers\OpenArchive\Documents\Errors\CannotDisseminateFormatDocument;
@@ -20,7 +19,9 @@ use Terraformers\OpenArchive\Documents\ListRecordsDocument;
 use Terraformers\OpenArchive\Documents\OaiDocument;
 use Terraformers\OpenArchive\Formatters\OaiDcFormatter;
 use Terraformers\OpenArchive\Formatters\OaiRecordFormatter;
+use Terraformers\OpenArchive\Helpers\DateTimeHelper;
 use Terraformers\OpenArchive\Models\OaiRecord;
+use Throwable;
 
 class OaiController extends Controller
 {
@@ -59,6 +60,13 @@ class OaiController extends Controller
 
     private static string $supportedDeletedRecord = self::DELETED_SUPPORT_PERSISTENT;
 
+    /**
+     * All dates provided by the OAI repository must be ISO8601, and with an additional requirement that only "zulu" is
+     * supported by the OAI spec (IE: YYYY-MM-DD, or YYYY-MM-DDTHH:MM:SSZ). The "Z" indicator means that we are using
+     * "zulu" or "UTC+0" as the timezone
+     *
+     * @see http://www.openarchives.org/OAI/openarchivesprotocol.html#Dates
+     */
     private static string $supportedGranularity = 'YYYY-MM-DDThh:mm:ssZ';
 
     public function index(HTTPRequest $request): HTTPResponse
@@ -86,9 +94,7 @@ class OaiController extends Controller
         $xmlDocument->setResponseDate();
         $xmlDocument->setRequestUrl($requestUrl);
 
-        $this->getResponse()->setBody($xmlDocument->getDocumentBody());
-
-        return $this->getResponse();
+        return $this->getResponseWithDocumentBody($xmlDocument);
     }
 
     protected function CannotDisseminateFormatResponse(HTTPRequest $request): HTTPResponse
@@ -99,9 +105,7 @@ class OaiController extends Controller
         $xmlDocument->setResponseDate();
         $xmlDocument->setRequestUrl($requestUrl);
 
-        $this->getResponse()->setBody($xmlDocument->getDocumentBody());
-
-        return $this->getResponse();
+        return $this->getResponseWithDocumentBody($xmlDocument);
     }
 
     /**
@@ -112,7 +116,7 @@ class OaiController extends Controller
         $xmlDocument = IdentifyDocument::create();
 
         // Response Date defaults to the time of the Request. Extension point is provided in this method
-        $xmlDocument->setResponseDate($this->getResponseDate());
+        $xmlDocument->setResponseDate();
         // Request URL defaults to the current URL. Extension point is provided in this method
         $xmlDocument->setRequestUrl($this->getRequestUrl($request));
         // Base URL defaults to the current URL. Extension point is provided in this method
@@ -132,9 +136,7 @@ class OaiController extends Controller
         // Domain can be edited through extension points provided. IDs are always just a number
         $xmlDocument->setOaiIdentifier(Director::host(), 1);
 
-        $this->getResponse()->setBody($xmlDocument->getDocumentBody());
-
-        return $this->getResponse();
+        return $this->getResponseWithDocumentBody($xmlDocument);
     }
 
     /**
@@ -154,9 +156,7 @@ class OaiController extends Controller
             $xmlDocument->addSupportedFormatter($formatter);
         }
 
-        $this->getResponse()->setBody($xmlDocument->getDocumentBody());
-
-        return $this->getResponse();
+        return $this->getResponseWithDocumentBody($xmlDocument);
     }
 
     /**
@@ -178,6 +178,13 @@ class OaiController extends Controller
             return $this->CannotDisseminateFormatResponse($request);
         }
 
+        // The OaiRecord formatter that we're going to use
+        $xmlDocument = ListRecordsDocument::create($this->getOaiRecordFormatter($metadataPrefix));
+        // Response Date defaults to the time of the Request. Extension point is provided in this method
+        $xmlDocument->setResponseDate();
+        // Request URL defaults to the current URL. Extension point is provided in this method
+        $xmlDocument->setRequestUrl($this->getRequestUrl($request));
+
         // The lower bound for selective harvesting
         $from = $request->getVar('from');
         // The upper bound for selective harvesting
@@ -187,17 +194,42 @@ class OaiController extends Controller
         // An encoded string containing pagination requirements for selective harvesting
         $resumptionToken = $request->getVar('resumptionToken');
 
+        if ($from) {
+            try {
+                $from = DateTimeHelper::getLocalStringFromUtc($from);
+            } catch (Throwable $e) {
+                $xmlDocument->addError(OaiDocument::ERROR_BAD_ARGUMENT, 'Invalid \'from\' date format provided');
+            }
+        }
+
+        if ($until) {
+            try {
+                $until = DateTimeHelper::getLocalStringFromUtc($until);
+            } catch (Throwable $e) {
+                $xmlDocument->addError(OaiDocument::ERROR_BAD_ARGUMENT, 'Invalid \'until\' date format provided');
+            }
+        }
+
+        if ($xmlDocument->hasErrors()) {
+            return $this->getResponseWithDocumentBody($xmlDocument);
+        }
+
         $oaiRecords = $this->fetchOaiRecords($from, $until, $set, $resumptionToken);
 
-        // The OaiRecord formatter that we're going to use
-        $xmlDocument = ListRecordsDocument::create($this->getOaiRecordFormatter($metadataPrefix));
-        // Response Date defaults to the time of the Request. Extension point is provided in this method
-        $xmlDocument->setResponseDate($this->getResponseDate());
-        // Request URL defaults to the current URL. Extension point is provided in this method
-        $xmlDocument->setRequestUrl($this->getRequestUrl($request));
+        if (!$oaiRecords->count()) {
+            $xmlDocument->addError(OaiDocument::ERROR_NO_RECORDS_MATCH);
+
+            return $this->getResponseWithDocumentBody($xmlDocument);
+        }
+
         // Start processing whatever OaiRecords we found
         $xmlDocument->processOaiRecords($oaiRecords);
 
+        return $this->getResponseWithDocumentBody($xmlDocument);
+    }
+
+    protected function getResponseWithDocumentBody(OaiDocument $xmlDocument): HTTPResponse
+    {
         $this->getResponse()->setBody($xmlDocument->getDocumentBody());
 
         return $this->getResponse();
@@ -230,22 +262,15 @@ class OaiController extends Controller
         return $baseUrl;
     }
 
-    protected function getResponseDate(): int
+    protected function getEarliestDatestamp(): string
     {
-        $timestamp = DBDatetime::now()->getTimestamp();
+        // We're just going to set it to the start of the Unix timestamp (meaning, there could be any range of
+        // datestamps in our system)
+        $dateString = '1970-01-01T00:00:00Z';
 
-        $this->extend('updateOaiResponseDate', $timestamp);
+        $this->extend('updateOaiEarliestDatestamp', $dateString);
 
-        return $timestamp;
-    }
-
-    protected function getEarliestDatestamp(): int
-    {
-        $timestamp = 0;
-
-        $this->extend('updateOaiEarliestDatestamp', $timestamp);
-
-        return $timestamp;
+        return $dateString;
     }
 
     protected function getRepositoryName(): string
@@ -257,6 +282,10 @@ class OaiController extends Controller
         return $repositoryName;
     }
 
+    /**
+     * Regarding dates, please @see $supportedGranularity docblock. All dates passed to this method should already be
+     * adjusted to local server time
+     */
     protected function fetchOaiRecords(
         ?string $from = null,
         ?string $until = null,
@@ -265,7 +294,6 @@ class OaiController extends Controller
     ): DataList {
         $filters = [];
 
-        // Filter support still to be tested
         if ($from) {
             $filters['LastEdited:GreaterThanOrEqual'] = $from;
         }

@@ -5,6 +5,8 @@ namespace Terraformers\OpenArchive\Tests\Jobs;
 use SilverStripe\Assets\File;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\Versioned\Versioned;
 use Terraformers\OpenArchive\Extensions\VersionedOaiRecordManager;
 use Terraformers\OpenArchive\Jobs\OaiRecordUpdateJob;
 use Terraformers\OpenArchive\Models\OaiRecord;
@@ -38,6 +40,7 @@ class OaiRecordUpdateJobTest extends SapphireTest
     {
         /** @var SiteTree|VersionedOaiRecordManager $page */
         $page = $this->objFromFixture(SiteTree::class, $fixtureId);
+        $pageId = $page->ID;
         $finalTitle = sprintf('%sEdit', $page->Title);
 
         // Check that we're set up correctly before we kick off
@@ -70,6 +73,14 @@ class OaiRecordUpdateJobTest extends SapphireTest
 
         /** @var OaiRecord $oaiRecord */
         $oaiRecord = $page->OaiRecords()->first();
+
+        // Re-fetch the page, and make sure we're grabbing the LIVE version of it (the same as the job)
+        /** @var SiteTree $page */
+        $page = Versioned::withVersionedMode(static function () use ($pageId): ?DataObject {
+            Versioned::set_stage(Versioned::LIVE);
+
+            return SiteTree::get_by_id($pageId);
+        });
 
         // Check that each value set on our OaiRecord is as expected
         $this->assertEquals(0, $oaiRecord->Deleted);

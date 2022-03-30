@@ -29,24 +29,31 @@ class OaiDocumentTest extends SapphireTest
         $this->assertTrue($rootElement->hasAttribute('xmlns'), 'xmlns not found');
     }
 
+    public function testHasErrors(): void
+    {
+        $documentOne = BaseDocument::create();
+        $documentTwo = BaseDocument::create();
+
+        $this->assertFalse($documentOne->hasErrors());
+        $this->assertFalse($documentTwo->hasErrors());
+
+        $documentOne->addError(OaiDocument::ERROR_BAD_ARGUMENT);
+        $documentTwo->addError(OaiDocument::ERROR_BAD_ARGUMENT, 'Error message');
+
+        $this->assertTrue($documentOne->hasErrors());
+        $this->assertTrue($documentTwo->hasErrors());
+    }
+
     /**
      * @param string $method
      * @param string $element
      * @param mixed $valueOne
      * @param mixed $valueTwo
-     * @param mixed $expectedOne
-     * @param mixed $expectedTwo
      * @return void
      * @dataProvider elementProvider
      */
-    public function testElementSetters(
-        string $method,
-        string $element,
-        $valueOne,
-        $valueTwo,
-        $expectedOne,
-        $expectedTwo
-    ): void {
+    public function testElementSetters(string $method, string $element, $valueOne, $valueTwo): void
+    {
         $document = BaseDocument::create();
         // Set the initial value
         $document->{$method}($valueOne);
@@ -57,14 +64,14 @@ class OaiDocumentTest extends SapphireTest
         $domElement = $domDocument->getElementById($element);
 
         $this->assertNotNull($domElement, sprintf('%s not found', $element));
-        $this->assertEquals($expectedOne, $domElement->nodeValue);
+        $this->assertEquals($valueOne, $domElement->nodeValue);
 
         // Set the element to a new value. Note, this should update the DOMElement that we already have instantiated
         // above
         $document->{$method}($valueTwo);
 
         // Check that the date was updated
-        $this->assertEquals($expectedTwo, $domElement->nodeValue);
+        $this->assertEquals($valueTwo, $domElement->nodeValue);
     }
 
     /**
@@ -143,16 +150,12 @@ class OaiDocumentTest extends SapphireTest
             [
                 'setResponseDate',
                 'responseDate',
-                0,
-                60,
                 '1970-01-01T12:00:00Z',
                 '1970-01-01T12:01:00Z',
             ],
             [
                 'setRequestUrl',
                 'request',
-                'https://localhost.test/api/v1/oai',
-                'https://localhost.local/api/v1/oai',
                 'https://localhost.test/api/v1/oai',
                 'https://localhost.local/api/v1/oai',
             ],

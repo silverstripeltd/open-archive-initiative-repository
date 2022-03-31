@@ -38,10 +38,10 @@ class IdentifyDocument extends OaiDocument
         $domElement->nodeValue = $email;
     }
 
-    public function setEarliestDatestamp(int $timestamp): void
+    public function setEarliestDatestamp(string $datestamp): void
     {
         $domElement = $this->findOrCreateElement('earliestDatestamp', $this->getIdentifyElement());
-        $domElement->nodeValue = date('Y-m-d\Th:i:s\Z', $timestamp);
+        $domElement->nodeValue = $datestamp;
     }
 
     public function setDeletedRecord(string $supportLevel): void

@@ -5,6 +5,7 @@ namespace Terraformers\OpenArchive\Formatters;
 use DOMDocument;
 use DOMElement;
 use SilverStripe\Control\Director;
+use Terraformers\OpenArchive\Helpers\DateTimeHelper;
 use Terraformers\OpenArchive\Models\OaiRecord;
 
 class OaiDcFormatter extends OaiRecordFormatter
@@ -87,7 +88,8 @@ class OaiDcFormatter extends OaiRecordFormatter
         // requesting them to do so. The date field then indicates the date when the associated resource was last
         // updated, and the Harvesters can do whatever they like with that
         $datestampElement = $document->createElement(self::FIELD_HEADER_DATESTAMP);
-        $datestampElement->nodeValue = date('Y-m-d\Th:i:s\Z', strtotime($oaiRecord->LastEdited));
+        // All date strings must be presented as UTC+0
+        $datestampElement->nodeValue = DateTimeHelper::getUtcStringFromLocal($oaiRecord->LastEdited);
 
         $headerElement->appendChild($datestampElement);
 
@@ -126,7 +128,8 @@ class OaiDcFormatter extends OaiRecordFormatter
 
         // Date field needs to be set a bit more manually, as we need to reformat the date
         $dateElement = $document->createElement(self::FIELD_DATE);
-        $dateElement->nodeValue = date('Y-m-d\Th:i:s\Z', strtotime($oaiRecord->Date));
+        // All date strings must be presented as UTC+0
+        $dateElement->nodeValue = DateTimeHelper::getUtcStringFromLocal($oaiRecord->Date);
 
         $oaiElement->appendChild($dateElement);
 

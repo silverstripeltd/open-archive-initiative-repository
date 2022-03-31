@@ -39,7 +39,7 @@ The goal of this module is to provide you with an easy entry point to start serv
 This module does **not** include anything to help with becoming an
 [Open Archive Initiative Harvester](http://www.openarchives.org/OAI/openarchivesprotocol.html#harvester).
 
-I am still new to the OAI spec, so we will be doing our absolute best to get everything right. Test coverage for what
+We are still new to the OAI spec, so we will be doing our absolute best to get everything right. Test coverage for what
 has been built is very high, but that doesn't help if we've just gotten something incorrect in the spec, so please be
 prepared to contribute your thoughts and/or code to help improve this module.
 
@@ -52,7 +52,8 @@ allow you to easily supplement this module with additional Metadata format suppo
 
 ### Identify
 
-Recommended environment variable: `OAI_API_ADMIN_EMAIL`
+Repository name: The default is simply using the Site Title that you have set in the CMS
+Admin email: Set using the environment variable `OAI_API_ADMIN_EMAIL`
 
 Please check out `OaiController::Identify()`. There are many options there for how you can configure different values
 for this verb.
@@ -60,10 +61,6 @@ for this verb.
 ### List Metadata Formats
 
 The response for this endpoint is generated based on the config you specify for `OaiController::$supported_formats`.
-
-### List Sets
-
-TBA
 
 ### List Identifiers
 
@@ -76,8 +73,16 @@ that you have specified for `OaiController::$supported_formats`.
 
 The output of this endpoint is based on your current OAI Records
 
-Filter support: TBA
-Resumption tokens: TBA
+Filter support:
+
+* `from`: specifies a lower bound for datestamp-based selective harvesting. UTC+0 datetimes must be provided.
+* `until`: specifies an upper bound for datestamp-based selective harvesting. UTC+0 datetimes must be provided.
+* `set`: TBA
+* `resumptionToken`: TBA
+
+### List Sets
+
+TBA
 
 ### Get Record
 
@@ -114,8 +119,8 @@ All updates for `OaiRecords` are performed through Queued Jobs. Please see the d
 This modules makes no assumptions about how you wish to populate OAI Record data. As such, you need to specify how your
 `DataObjects` are going to map to the expected OAI fields.
 
-You can have a look in `OaiRecord` for a list of MANAGED_FIELDS fields. All of which support you adding CSV values for
-when you need to have multiple of one field.
+You can have a look in `OaiRecord` for a list of MANAGED_FIELDS. All of which support you adding CSV values for when
+you need to have multiple of one field.
 
 A note on CSV parsing: If you're anticipating that some of your properties could contain commas, then you might instead
 need to map to a method that appropriately wraps your property value in quotes. See OaiRecord for the supported

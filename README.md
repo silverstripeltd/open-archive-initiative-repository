@@ -1,4 +1,4 @@
-# Open Archive Initiative
+# Open Archive Initiative > Repository
 
 * [Requirements](#requirements)
 * [Installation](#installation)
@@ -28,7 +28,7 @@
 ## Installation
 
 ```
-composer require silverstripe-terraformers/open-archive-initiative
+composer require silverstripe-terraformers/open-archive-initiative-repository
 ```
 
 ## Goal

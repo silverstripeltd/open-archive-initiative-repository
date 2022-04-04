@@ -114,6 +114,8 @@ class OaiRecord extends DataObject
         ],
     ];
 
+    private static string $default_sort = 'ID ASC';
+
     public function addSet(string $title): void
     {
         $this->OaiSets()->add(OaiSet::findOrCreate($title));

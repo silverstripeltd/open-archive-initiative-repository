@@ -15,6 +15,7 @@ class DateTimeHelper
             throw new Exception('Invalid UTC date format provided');
         }
 
+        // Note: strtotime() already converts UTC date strings (UTC+Z) into local timestamps
         return date('Y-m-d H:i:s', strtotime($utcDateString));
     }
 

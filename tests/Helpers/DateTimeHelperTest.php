@@ -15,12 +15,8 @@ class DateTimeHelperTest extends SapphireTest
 
         $localString = '2022-01-01 20:00:00';
         $utcString = DateTimeHelper::getUtcStringFromLocal($localString);
-        // Check to see if Daylight Savings is active in Auckland
-        $daylightSavings = (bool) date('I');
-        // UTC can be -12 or -13 depending on Daylight Savings
-        $expectedUtc = $daylightSavings
-            ? '2022-01-01T07:00:00Z'
-            : '2022-01-01T08:00:00Z';
+        // UTC is -13 when Daylight Savings is active
+        $expectedUtc = '2022-01-01T07:00:00Z';
 
         $this->assertEquals($expectedUtc, $utcString);
     }
@@ -32,12 +28,8 @@ class DateTimeHelperTest extends SapphireTest
 
         $utcString = '2022-01-01T07:00:00Z';
         $localString = DateTimeHelper::getLocalStringFromUtc($utcString);
-        // Check to see if Daylight Savings is active in Auckland
-        $daylightSavings = (bool) date('I');
-        // Auckland time can be +12 or +13 depending on Daylight Savings
-        $expectedLocal = $daylightSavings
-            ? '2022-01-01 20:00:00'
-            : '2022-01-01 19:00:00';
+        // UTC is -13 when Daylight Savings is active
+        $expectedLocal = '2022-01-01 20:00:00';
 
         $this->assertEquals($expectedLocal, $localString);
     }

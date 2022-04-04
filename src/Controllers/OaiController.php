@@ -9,7 +9,7 @@ use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\PaginatedList;
 use SilverStripe\SiteConfig\SiteConfig;
 use Terraformers\OpenArchive\Documents\Errors\BadVerbDocument;
 use Terraformers\OpenArchive\Documents\Errors\CannotDisseminateFormatDocument;
@@ -20,6 +20,7 @@ use Terraformers\OpenArchive\Documents\OaiDocument;
 use Terraformers\OpenArchive\Formatters\OaiDcFormatter;
 use Terraformers\OpenArchive\Formatters\OaiRecordFormatter;
 use Terraformers\OpenArchive\Helpers\DateTimeHelper;
+use Terraformers\OpenArchive\Helpers\ResumptionTokenHelper;
 use Terraformers\OpenArchive\Models\OaiRecord;
 use Throwable;
 
@@ -56,9 +57,9 @@ class OaiController extends Controller
         'oai_dc' => OaiDcFormatter::class,
     ];
 
-    private static string $supportedProtocol = '2.0';
+    private static string $supported_protocol = '2.0';
 
-    private static string $supportedDeletedRecord = self::DELETED_SUPPORT_PERSISTENT;
+    private static string $supported_deleted_record = self::DELETED_SUPPORT_PERSISTENT;
 
     /**
      * All dates provided by the OAI repository must be ISO8601, and with an additional requirement that only "zulu" is
@@ -67,7 +68,20 @@ class OaiController extends Controller
      *
      * @see http://www.openarchives.org/OAI/openarchivesprotocol.html#Dates
      */
-    private static string $supportedGranularity = 'YYYY-MM-DDThh:mm:ssZ';
+    private static string $supported_granularity = 'YYYY-MM-DDThh:mm:ssZ';
+
+    /**
+     * For verbs that use Resumption Tokens, this is the configuration that controls how many OAI Records we will load
+     * into a single response
+     */
+    private static string $oai_records_per_page = '100';
+
+    /**
+     * The expiration time (in seconds) of any resumption tokens that are generated. Default is 60 minutes
+     *
+     * Set this to null if you want an infinite duration
+     */
+    private static ?int $resumption_token_expiry = 3600;
 
     public function index(HTTPRequest $request): HTTPResponse
     {
@@ -122,11 +136,11 @@ class OaiController extends Controller
         // Base URL defaults to the current URL. Extension point is provided in this method
         $xmlDocument->setBaseUrl($this->getBaseUrl($request));
         // Protocol Version defaults to 2.0. You can update the configuration if required
-        $xmlDocument->setProtocolVersion($this->config()->get('supportedProtocol'));
+        $xmlDocument->setProtocolVersion($this->config()->get('supported_protocol'));
         // Deleted Record support defaults to "persistent". You can update the configuration if required
-        $xmlDocument->setDeletedRecord($this->config()->get('supportedDeletedRecord'));
+        $xmlDocument->setDeletedRecord($this->config()->get('supported_deleted_record'));
         // Date Granularity support defaults to date and time. You can update the configuration if required
-        $xmlDocument->setGranularity($this->config()->get('supportedGranularity'));
+        $xmlDocument->setGranularity($this->config()->get('supported_granularity'));
         // You should set your env var appropriately for this value
         $xmlDocument->setAdminEmail(Environment::getEnv(OaiController::OAI_API_ADMIN_EMAIL));
         // Earliest Datestamp defaults to the Jan 1970 (the start of UNIX). Extension point is provided in this method
@@ -185,28 +199,50 @@ class OaiController extends Controller
         // Request URL defaults to the current URL. Extension point is provided in this method
         $xmlDocument->setRequestUrl($this->getRequestUrl($request));
 
-        // The lower bound for selective harvesting
-        $from = $request->getVar('from');
-        // The upper bound for selective harvesting
-        $until = $request->getVar('until');
+        // The lower bound for selective harvesting. The original UTC should be preserved for Resumption Tokens and any
+        // display requirements
+        $fromUtc = $request->getVar('from');
+        // Local value which will be used purely for internal filtering
+        $fromLocal = null;
+        // The upper bound for selective harvesting. The original UTC should be preserved for Resumption Tokens and any
+        // display requirements
+        $untilUtc = $request->getVar('until');
+        // Local value which will be used purely for internal filtering
+        $untilLocal = null;
         // Specifies the Set for selective harvesting
-        $set = (int) $request->getVar('set');
+        $set = $request->getVar('set');
         // An encoded string containing pagination requirements for selective harvesting
         $resumptionToken = $request->getVar('resumptionToken');
+        // Default page is always 1, but this can change later if there is a Resumption Token active
+        $currentPage = 1;
 
-        if ($from) {
+        if ($fromUtc) {
             try {
-                $from = DateTimeHelper::getLocalStringFromUtc($from);
+                $fromLocal = DateTimeHelper::getLocalStringFromUtc($fromUtc);
             } catch (Throwable $e) {
                 $xmlDocument->addError(OaiDocument::ERROR_BAD_ARGUMENT, 'Invalid \'from\' date format provided');
             }
         }
 
-        if ($until) {
+        if ($untilUtc) {
             try {
-                $until = DateTimeHelper::getLocalStringFromUtc($until);
+                $untilLocal = DateTimeHelper::getLocalStringFromUtc($untilUtc);
             } catch (Throwable $e) {
                 $xmlDocument->addError(OaiDocument::ERROR_BAD_ARGUMENT, 'Invalid \'until\' date format provided');
+            }
+        }
+
+        if ($resumptionToken) {
+            try {
+                $currentPage = ResumptionTokenHelper::getPageFromResumptionToken(
+                    $resumptionToken,
+                    'ListRecords',
+                    $fromUtc,
+                    $untilUtc,
+                    $set
+                );
+            } catch (Throwable $e) {
+                $xmlDocument->addError(OaiDocument::ERROR_BAD_RESUMPTION_TOKEN, $e->getMessage());
             }
         }
 
@@ -214,9 +250,15 @@ class OaiController extends Controller
             return $this->getResponseWithDocumentBody($xmlDocument);
         }
 
-        $oaiRecords = $this->fetchOaiRecords($from, $until, $set, $resumptionToken);
+        // Grab the Paginated List of records based on our filter criteria
+        $oaiRecords = $this->fetchOaiRecords($fromLocal, $untilLocal, $set);
 
-        if (!$oaiRecords->count()) {
+        // Set the page length and current page of our Paginated list
+        $oaiRecords->setPageLength($this->config()->get('oai_records_per_page'));
+        $oaiRecords->setCurrentPage($currentPage);
+
+        // If there are no results after we apply filters and pagination, then we should return an error response
+        if (!$oaiRecords->Count()) {
             $xmlDocument->addError(OaiDocument::ERROR_NO_RECORDS_MATCH);
 
             return $this->getResponseWithDocumentBody($xmlDocument);
@@ -224,6 +266,23 @@ class OaiController extends Controller
 
         // Start processing whatever OaiRecords we found
         $xmlDocument->processOaiRecords($oaiRecords);
+
+        // If there are still more records to be processed, then we need to add a new Resumption Token to our response
+        if ($oaiRecords->TotalPages() > $currentPage) {
+            $newResumptionToken = ResumptionTokenHelper::generateResumptionToken(
+                'ListRecords',
+                $currentPage + 1,
+                $fromUtc,
+                $untilUtc,
+                $set
+            );
+
+            $xmlDocument->setResumptionToken($newResumptionToken);
+        } elseif ($resumptionToken) {
+            // If this is the last page of a request that included a Resumption Token, then we specifically need to add
+            // an empty Token - indicating that the list is now complete
+            $xmlDocument->setResumptionToken('');
+        }
 
         return $this->getResponseWithDocumentBody($xmlDocument);
     }
@@ -283,15 +342,11 @@ class OaiController extends Controller
     }
 
     /**
-     * Regarding dates, please @see $supportedGranularity docblock. All dates passed to this method should already be
+     * Regarding dates, please @see $supported_granularity docblock. All dates passed to this method should already be
      * adjusted to local server time
      */
-    protected function fetchOaiRecords(
-        ?string $from = null,
-        ?string $until = null,
-        ?int $set = null,
-        ?string $resumptionToken = null
-    ): DataList {
+    protected function fetchOaiRecords(?string $from = null, ?string $until = null, ?int $set = null): PaginatedList
+    {
         $filters = [];
 
         if ($from) {
@@ -306,15 +361,15 @@ class OaiController extends Controller
             // Set support to be added
         }
 
-        if ($resumptionToken) {
-            // Resumption token support to be added
-        }
-
         if (!$filters) {
-            return OaiRecord::get();
+            return PaginatedList::create(OaiRecord::get());
         }
 
-        return OaiRecord::get()->filter($filters);
+        $list = OaiRecord::get()
+            ->sort('LastEdited ASC')
+            ->filter($filters);
+
+        return PaginatedList::create($list);
     }
 
 }

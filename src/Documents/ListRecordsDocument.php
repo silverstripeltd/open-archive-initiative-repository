@@ -2,8 +2,9 @@
 
 namespace Terraformers\OpenArchive\Documents;
 
-use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\PaginatedList;
 use Terraformers\OpenArchive\Formatters\OaiRecordFormatter;
+use Terraformers\OpenArchive\Helpers\ResumptionTokenHelper;
 use Terraformers\OpenArchive\Models\OaiRecord;
 
 class ListRecordsDocument extends OaiDocument
@@ -21,15 +22,31 @@ class ListRecordsDocument extends OaiDocument
     }
 
     /**
-     * @param DataList|OaiRecord[] $oaiRecords
+     * @param PaginatedList|OaiRecord[] $oaiRecords
      */
-    public function processOaiRecords(DataList $oaiRecords): void
+    public function processOaiRecords(PaginatedList $oaiRecords): void
     {
         $listRecordsElement = $this->findOrCreateElement('ListRecords');
 
         foreach ($oaiRecords as $oaiRecord) {
             $listRecordsElement->appendChild($this->formatter->generateDomElement($this->document, $oaiRecord, true));
         }
+    }
+
+    public function setResumptionToken(string $resumptionToken): void
+    {
+        $listRecordsElement = $this->findOrCreateElement('ListRecords');
+        $resumptionTokenElement = $this->findOrCreateElement('resumptionToken', $listRecordsElement);
+
+        $resumptionTokenElement->nodeValue = $resumptionToken;
+
+        $tokenExpiry = ResumptionTokenHelper::getExpiryFromResumptionToken($resumptionToken);
+
+        if (!$tokenExpiry) {
+            return;
+        }
+
+        $resumptionTokenElement->setAttribute('expirationDate', $tokenExpiry);
     }
 
 }

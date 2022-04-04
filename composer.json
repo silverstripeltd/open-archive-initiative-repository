@@ -1,5 +1,5 @@
 {
-    "name": "silverstripe-terraformers/open-archive-iniative",
+    "name": "silverstripe-terraformers/open-archive-initiative-repository",
     "description": "Controller and Services that allow you to serve data as an Open Archive Initiative Repository",
     "type": "silverstripe-vendormodule",
     "keywords": [

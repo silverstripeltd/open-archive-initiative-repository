@@ -25,7 +25,7 @@ class ListRecordsDocument extends OaiDocument
         $this->setRequestVerb(OaiDocument::VERB_LIST_RECORDS);
     }
 
-    public function setFormatter(OaiRecordFormatter $formatter)
+    public function setFormatter(OaiRecordFormatter $formatter): void
     {
         $this->formatter = $formatter;
         $this->setMetadataPrefix($this->formatter->getMetadataPrefix());

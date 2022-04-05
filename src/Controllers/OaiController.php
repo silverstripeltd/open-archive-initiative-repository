@@ -185,46 +185,56 @@ class OaiController extends Controller
      */
     protected function ListRecords(HTTPRequest $request): HTTPResponse
     {
-        // The metadataPrefix that records will be output in. Should match to one of our supported_formats
-        $metadataPrefix = $request->getVar('metadataPrefix');
-
-        if (!$metadataPrefix || !array_key_exists($metadataPrefix, $this->config()->get('supported_formats'))) {
-            return $this->CannotDisseminateFormatResponse($request);
-        }
-
         // The OaiRecord formatter that we're going to use
-        $xmlDocument = ListRecordsDocument::create($this->getOaiRecordFormatter($metadataPrefix));
+        $xmlDocument = ListRecordsDocument::create();
         // Response Date defaults to the time of the Request. Extension point is provided in this method
         $xmlDocument->setResponseDate();
         // Request URL defaults to the current URL. Extension point is provided in this method
         $xmlDocument->setRequestUrl($this->getRequestUrl($request));
 
+        // An encoded string containing request and pagination requirements for selective harvesting
+        $resumptionToken = $request->getVar('resumptionToken');
+        // The Record Formatter that we will use
+        $metadataPrefix = null;
+        // The current paginated page. Default is always 1
+        $currentPage = 1;
         // The lower bound for selective harvesting. The original UTC should be preserved for Resumption Tokens and any
         // display requirements
-        $fromUtc = $request->getVar('from');
+        $fromUtc = null;
         // Local value which will be used purely for internal filtering
         $fromLocal = null;
         // The upper bound for selective harvesting. The original UTC should be preserved for Resumption Tokens and any
         // display requirements
-        $untilUtc = $request->getVar('until');
+        $untilUtc = null;
         // Local value which will be used purely for internal filtering
         $untilLocal = null;
-        // Specifies the Set for selective harvesting
-        $set = $request->getVar('set');
-        // An encoded string containing pagination requirements for selective harvesting
-        $resumptionToken = $request->getVar('resumptionToken');
-        // Default page is always 1, but this can change later if there is a Resumption Token active
-        $currentPage = 1;
 
-        if ($fromUtc) {
+        if ($resumptionToken) {
+            // If we have a Resumption Token, then that needs to be where we define all of our request params from
+            try {
+                $resumptionParts = ResumptionTokenHelper::getRequestParamsFromResumptionToken($resumptionToken);
+
+                $metadataPrefix = $resumptionParts['metadataPrefix'];
+                $currentPage = $resumptionParts['page'];
+                $fromUtc = $resumptionParts['from'] ?? null;
+                $untilUtc = $resumptionParts['until'] ?? null;
+                $set = $resumptionParts['set'] ?? null;
+            } catch (Throwable $e) {
+                $xmlDocument->addError(OaiDocument::ERROR_BAD_RESUMPTION_TOKEN, $e->getMessage());
+            }
+        } else {
+            // If there is no Resumption Token, then any/all request params are expected to be provided through GET
+            $metadataPrefix = $request->getVar('metadataPrefix');
+            $fromUtc = $request->getVar('from');
+            $untilUtc = $request->getVar('until');
+            $set = $request->getVar('set');
+
             try {
                 $fromLocal = DateTimeHelper::getLocalStringFromUtc($fromUtc);
             } catch (Throwable $e) {
                 $xmlDocument->addError(OaiDocument::ERROR_BAD_ARGUMENT, 'Invalid \'from\' date format provided');
             }
-        }
 
-        if ($untilUtc) {
             try {
                 $untilLocal = DateTimeHelper::getLocalStringFromUtc($untilUtc);
             } catch (Throwable $e) {
@@ -232,23 +242,17 @@ class OaiController extends Controller
             }
         }
 
-        if ($resumptionToken) {
-            try {
-                $currentPage = ResumptionTokenHelper::getPageFromResumptionToken(
-                    $resumptionToken,
-                    'ListRecords',
-                    $fromUtc,
-                    $untilUtc,
-                    $set
-                );
-            } catch (Throwable $e) {
-                $xmlDocument->addError(OaiDocument::ERROR_BAD_RESUMPTION_TOKEN, $e->getMessage());
-            }
-        }
-
+        // If we generated any errors above, then we should bail out there
         if ($xmlDocument->hasErrors()) {
             return $this->getResponseWithDocumentBody($xmlDocument);
         }
+
+        // If the requested metadataPrefix does not match any of our Record Formatters then we cannot continue
+        if (!$metadataPrefix || !array_key_exists($metadataPrefix, $this->config()->get('supported_formats'))) {
+            return $this->CannotDisseminateFormatResponse($request);
+        }
+
+        $xmlDocument->setFormatter($this->getOaiRecordFormatter($metadataPrefix));
 
         // Grab the Paginated List of records based on our filter criteria
         $oaiRecords = $this->fetchOaiRecords($fromLocal, $untilLocal, $set);
@@ -270,7 +274,7 @@ class OaiController extends Controller
         // If there are still more records to be processed, then we need to add a new Resumption Token to our response
         if ($oaiRecords->TotalPages() > $currentPage) {
             $newResumptionToken = ResumptionTokenHelper::generateResumptionToken(
-                'ListRecords',
+                $metadataPrefix,
                 $currentPage + 1,
                 $fromUtc,
                 $untilUtc,

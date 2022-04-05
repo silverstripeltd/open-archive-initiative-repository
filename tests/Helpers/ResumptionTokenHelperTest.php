@@ -2,7 +2,6 @@
 
 namespace Terraformers\OpenArchive\Tests\Helpers;
 
-use ReflectionClass;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use Terraformers\OpenArchive\Controllers\OaiController;
@@ -18,7 +17,7 @@ class ResumptionTokenHelperTest extends SapphireTest
 
         DBDatetime::set_mock_now('2020-01-01 13:00:00');
 
-        $verb = 'ListRecords';
+        $metadataPrefix = 'oai_dc';
         $page = 3;
         $from = '2022-01-01T01:00:00Z';
         $until = '2022-01-01T02:00:00Z';
@@ -27,30 +26,25 @@ class ResumptionTokenHelperTest extends SapphireTest
         $expiry = '2020-01-01T01:00:00Z';
 
         $expectedParts = [
-            'verb' => $verb,
+            'metadataPrefix' => $metadataPrefix,
             'page' => $page,
             'from' => $from,
             'until' => $until,
             'set' => $set,
             'expiry' => $expiry,
         ];
+        ksort($expectedParts);
 
         // Generate our Token
-        $token = ResumptionTokenHelper::generateResumptionToken($verb, $page, $from, $until, $set);
+        $token = ResumptionTokenHelper::generateResumptionToken($metadataPrefix, $page, $from, $until, $set);
 
-        // Now decode that Token
-        $reflection = new ReflectionClass(ResumptionTokenHelper::class);
-        $method = $reflection->getMethod('getResumptionTokenParts');
-        $method->setAccessible(true);
-        $resumptionParts = $method->invoke(null, $token);
+        // Just a simple check that our Token is a string, not going to bother matching hashes
+        $this->assertIsString($token);
 
-        // And check that the Token that was encoded and decoded matches our expected values
-        $this->assertEquals(ksort($expectedParts), ksort($resumptionParts));
-        // Check that our "get page number" method works as well
-        $this->assertEquals(
-            $page,
-            ResumptionTokenHelper::getPageFromResumptionToken($token, $verb, $from, $until, $set)
-        );
+        $parts = ResumptionTokenHelper::getRequestParamsFromResumptionToken($token);
+
+        // Check that the Token that was encoded and decoded matches our expected values
+        $this->assertEquals($expectedParts, $parts);
         // Check that our "get expiry" method works as well
         $this->assertEquals($expiry, ResumptionTokenHelper::getExpiryFromResumptionToken($token));
     }
@@ -64,56 +58,51 @@ class ResumptionTokenHelperTest extends SapphireTest
 
         DBDatetime::set_mock_now('2020-01-01 13:00:00');
 
-        $verb = 'ListRecords';
+        $metadataPrefix = 'oai_dc';
         $page = 3;
         $from = '2022-01-01T01:00:00Z';
         $until = '2022-01-01T02:00:00Z';
         $set = 2;
 
         // Generate our Token
-        $token = ResumptionTokenHelper::generateResumptionToken($verb, $page, $from, $until, $set);
+        $token = ResumptionTokenHelper::generateResumptionToken($metadataPrefix, $page, $from, $until, $set);
 
         // Now set the time to a couple hours later. This should invalidate the Resumption Token
         DBDatetime::set_mock_now('2020-01-01 15:00:00');
 
         // This should throw an Exception
-        ResumptionTokenHelper::getPageFromResumptionToken($token, $verb, $from, $until, $set);
+        ResumptionTokenHelper::getRequestParamsFromResumptionToken($token);
     }
 
     public function testResumptionTokenNoExpiry(): void
     {
         OaiController::config()->set('resumption_token_expiry', null);
 
-        $verb = 'ListRecords';
+        $metadataPrefix = 'oai_dc';
         $page = 3;
         $from = '2022-01-01T01:00:00Z';
         $until = '2022-01-01T02:00:00Z';
         $set = 2;
 
         $expectedParts = [
-            'verb' => $verb,
+            'metadataPrefix' => $metadataPrefix,
             'page' => $page,
             'from' => $from,
             'until' => $until,
             'set' => $set,
         ];
+        ksort($expectedParts);
 
         // Generate our Token
-        $token = ResumptionTokenHelper::generateResumptionToken($verb, $page, $from, $until, $set);
+        $token = ResumptionTokenHelper::generateResumptionToken($metadataPrefix, $page, $from, $until, $set);
 
-        // Now decode that Token
-        $reflection = new ReflectionClass(ResumptionTokenHelper::class);
-        $method = $reflection->getMethod('getResumptionTokenParts');
-        $method->setAccessible(true);
-        $resumptionParts = $method->invoke(null, $token);
+        // Just a simple check that our Token is a string, not going to bother matching hashes
+        $this->assertIsString($token);
 
-        // And check that the Token that was encoded and decoded matches our expected values
-        $this->assertEquals(ksort($expectedParts), ksort($resumptionParts));
-        // And check that our "get page number" method works as well
-        $this->assertEquals(
-            $page,
-            ResumptionTokenHelper::getPageFromResumptionToken($token, $verb, $from, $until, $set)
-        );
+        $parts = ResumptionTokenHelper::getRequestParamsFromResumptionToken($token);
+
+        // Check that the Token that was encoded and decoded matches our expected values
+        $this->assertEquals($expectedParts, $parts);
         // Check that our "get expiry" method works as well (expecting there to be no value)
         $this->assertNull(ResumptionTokenHelper::getExpiryFromResumptionToken($token));
     }

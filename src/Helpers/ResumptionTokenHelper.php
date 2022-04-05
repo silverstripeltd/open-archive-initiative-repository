@@ -7,30 +7,34 @@ use SilverStripe\ORM\FieldType\DBDatetime;
 use Terraformers\OpenArchive\Controllers\OaiController;
 
 /**
- * Resumption Tokens are a form of pagination, however, they also contain a level of validation.
+ * Resumption Tokens are a form of pagination, but they also include any/all filter criteria for the request.
  *
- * Each Resumption Token should represent a specific request, including whatever filters might have been applied as
- * part of that request, as well as representing a particular "page" in the Paginated List.
+ * The goal is that a Harvester might make an initial request for something like:
+ * ?verb=ListRecords&metadataFormat=oai_dc&from=2022-01-01&until=2022-02-01
  *
- * The goal is to increase reliability of pagination by making sure that each requested "page" came from a request
- * containing the expected filters. EG: You can't send an unfiltered request for OAI Records, see that there are 10
- * pages, and then decide to request page=10 with some filters now applied. The Token itself would be aware that a
- * different filter has been applied, and it would be invalid.
+ * If we then determine that there are additional pages of records that the Harvester needs to consumer, then we would
+ * present them with a Resumption Token (for us, that's a base64 encoded value). The Harvester would then use the
+ * verb and resumption token to perform followup requests:
+ * ?verb=ListRecords&resumptionToken=[some-token-we-generated]
+ *
+ * Resumption Tokens can also come with an expiry date to serve as a form of validation to check that requests are being
+ * completed within a particular timeframe. Expiry is enabled by default, but you can disable it by updating setting
+ * the OaiController::$resumption_token_expiry config to null.
  */
 class ResumptionTokenHelper
 {
 
     public static function generateResumptionToken(
-        string $verb,
+        string $metadataPrefix,
         int $page,
         ?string $from = null,
         ?string $until = null,
         ?int $set = null
     ): string {
-        // Every Resumption Token must include a verb and page
+        // Every Resumption Token must include a metadataPrefix and page
         $parts = [
+            'metadataPrefix' => $metadataPrefix,
             'page' => $page,
-            'verb' => $verb,
         ];
 
         // Check to see if we want to give our Tokens an expiry date
@@ -58,34 +62,18 @@ class ResumptionTokenHelper
         return base64_encode(json_encode($parts));
     }
 
-    public static function getPageFromResumptionToken(
-        string $resumptionToken,
-        string $expectedVerb,
-        ?string $expectedFrom = null,
-        ?string $expectedUntil = null,
-        ?int $expectedSet = null
-    ): int {
+    public static function getRequestParamsFromResumptionToken(string $resumptionToken): array
+    {
         $resumptionParts = static::getResumptionTokenParts($resumptionToken);
 
         // Grab the array values of our Resumption Token or default those values to null
         $resumptionPage = $resumptionParts['page'] ?? null;
-        $resumptionVerb = $resumptionParts['verb'] ?? null;
-        $resumptionFrom = $resumptionParts['from'] ?? null;
-        $resumptionUntil = $resumptionParts['until'] ?? null;
-        $resumptionSet = $resumptionParts['set'] ?? null;
+        $resumptionMetadataPrefix = $resumptionParts['metadataPrefix'] ?? null;
         $resumptionExpiry = $resumptionParts['expiry'] ?? null;
 
-        // Every Resumption Token should include (at the very least) the active page, if it doesn't, then it's invalid
-        if (!$resumptionPage) {
-            throw new Exception('Invalid resumption token');
-        }
-
-        // If any of these values do not match the expected values, then this Resumption Token is invalid
-        if ($resumptionVerb !== $expectedVerb
-            || $resumptionFrom !== $expectedFrom
-            || $resumptionUntil !== $expectedUntil
-            || $resumptionSet !== $expectedSet
-        ) {
+        // Every Resumption Token should include (at the very least) the active page and the metadataPrefix, if it
+        // doesn't, then it's invalid
+        if (!$resumptionPage || !$resumptionMetadataPrefix) {
             throw new Exception('Invalid resumption token');
         }
 
@@ -94,7 +82,7 @@ class ResumptionTokenHelper
 
         // The duration has been set to infinite, so we can return now
         if (!$tokenExpiryLength) {
-            return $resumptionPage;
+            return $resumptionParts;
         }
 
         // If the current time is greater than the expiry date of the Resumption Token, then this Token is invalid
@@ -104,7 +92,7 @@ class ResumptionTokenHelper
         }
 
         // The Resumption Token is valid, so we can return whatever value we have for page
-        return $resumptionPage;
+        return $resumptionParts;
     }
 
     public static function getExpiryFromResumptionToken(string $resumptionToken): ?string

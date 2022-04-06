@@ -9,8 +9,12 @@ use Exception;
 class DateTimeHelper
 {
 
-    public static function getLocalStringFromUtc(string $utcDateString): string
+    public static function getLocalStringFromUtc(?string $utcDateString = null): ?string
     {
+        if (!$utcDateString) {
+            return null;
+        }
+
         if (!static::isSupportedUtcFormat($utcDateString)) {
             throw new Exception('Invalid UTC date format provided');
         }
@@ -19,8 +23,12 @@ class DateTimeHelper
         return date('Y-m-d H:i:s', strtotime($utcDateString));
     }
 
-    public static function getUtcStringFromLocal(string $localDateString): string
+    public static function getUtcStringFromLocal(?string $localDateString = null): ?string
     {
+        if (!$localDateString) {
+            return null;
+        }
+
         $dateTime = new DateTime($localDateString);
         $dateTime->setTimezone(new DateTimeZone('UTC'));
 

@@ -2,6 +2,7 @@
 
 namespace Terraformers\OpenArchive\Documents;
 
+use Exception;
 use SilverStripe\ORM\PaginatedList;
 use Terraformers\OpenArchive\Formatters\OaiRecordFormatter;
 use Terraformers\OpenArchive\Helpers\ResumptionTokenHelper;
@@ -10,14 +11,23 @@ use Terraformers\OpenArchive\Models\OaiRecord;
 class ListRecordsDocument extends OaiDocument
 {
 
-    private OaiRecordFormatter $formatter;
+    private ?OaiRecordFormatter $formatter = null;
 
-    public function __construct(OaiRecordFormatter $formatter)
+    public function __construct(?OaiRecordFormatter $formatter = null)
     {
         parent::__construct();
 
-        $this->formatter = $formatter;
+        if ($formatter) {
+            $this->setMetadataPrefix($this->formatter->getMetadataPrefix());
+            $this->formatter = $formatter;
+        }
+
         $this->setRequestVerb(OaiDocument::VERB_LIST_RECORDS);
+    }
+
+    public function setFormatter(OaiRecordFormatter $formatter): void
+    {
+        $this->formatter = $formatter;
         $this->setMetadataPrefix($this->formatter->getMetadataPrefix());
     }
 
@@ -26,6 +36,10 @@ class ListRecordsDocument extends OaiDocument
      */
     public function processOaiRecords(PaginatedList $oaiRecords): void
     {
+        if (!$this->formatter) {
+            throw new Exception('No OAI Record formatter has been set');
+        }
+
         $listRecordsElement = $this->findOrCreateElement('ListRecords');
 
         foreach ($oaiRecords as $oaiRecord) {

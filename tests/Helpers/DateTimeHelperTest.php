@@ -8,6 +8,12 @@ use Terraformers\OpenArchive\Helpers\DateTimeHelper;
 class DateTimeHelperTest extends SapphireTest
 {
 
+    public function testNullStrings(): void
+    {
+        $this->assertNull(DateTimeHelper::getLocalStringFromUtc());
+        $this->assertNull(DateTimeHelper::getUtcStringFromLocal());
+    }
+
     public function testGetUtcStringFromLocal(): void
     {
         // We'll use Auckland time for our tests

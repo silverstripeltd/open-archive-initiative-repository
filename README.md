@@ -77,7 +77,8 @@ Filter support:
 
 * `from`: specifies a lower bound for datestamp-based selective harvesting. UTC+0 datetimes must be provided.
 * `until`: specifies an upper bound for datestamp-based selective harvesting. UTC+0 datetimes must be provided.
-* `resumptionToken`: Includes validation of current verb and filters
+* `resumptionToken`: Default to 1 hour expiry time. This can be updated through the
+  `OaiController::$resumption_token_expiry` config
 * `set`: TBA
 
 ### List Sets

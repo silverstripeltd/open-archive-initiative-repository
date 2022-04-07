@@ -7,9 +7,9 @@
 * [Supported Verbs](#supported-verbs)
   * [Identify](#identify)
   * [List Metadata Formats](#list-metadata-formats)
-  * [List Sets](#list-sets)
-  * [List Identifiers](#list-identifiers)
   * [List Records](#list-records)
+  * [List Identifiers](#list-identifiers)
+  * [List Sets (TBA)](#list-sets-tba)
   * [Get Record](#get-record)
 * [Configuration](#configuration)
   * [OAI Record Managers](#oai-record-managers)
@@ -62,10 +62,6 @@ for this verb.
 
 The response for this endpoint is generated based on the config you specify for `OaiController::$supported_formats`.
 
-### List Identifiers
-
-TBA
-
 ### List Records
 
 This endpoint requires that the request includes a `metadataPrefix` parameter value that matches one of the configs
@@ -81,13 +77,17 @@ Filter support:
   `OaiController::$resumption_token_expiry` config
 * `set`: TBA
 
-### List Sets
+### List Identifiers
+
+Same support as List Records. The only difference is that List Identifiers only provides `headers` for each OAI Record.
+
+### List Sets (TBA)
 
 TBA
 
 ### Get Record
 
-TBA
+Requires harvesters to provide a `metadataPrefix` and `identifier`.
 
 ## OAI Records
 

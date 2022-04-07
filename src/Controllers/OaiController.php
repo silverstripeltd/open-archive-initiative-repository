@@ -13,13 +13,17 @@ use SilverStripe\ORM\PaginatedList;
 use SilverStripe\SiteConfig\SiteConfig;
 use Terraformers\OpenArchive\Documents\Errors\BadVerbDocument;
 use Terraformers\OpenArchive\Documents\Errors\CannotDisseminateFormatDocument;
+use Terraformers\OpenArchive\Documents\GetRecordDocument;
 use Terraformers\OpenArchive\Documents\IdentifyDocument;
+use Terraformers\OpenArchive\Documents\ListIdentifiersDocument;
 use Terraformers\OpenArchive\Documents\ListMetadataFormatsDocument;
 use Terraformers\OpenArchive\Documents\ListRecordsDocument;
 use Terraformers\OpenArchive\Documents\OaiDocument;
+use Terraformers\OpenArchive\Documents\RecordsDocument;
 use Terraformers\OpenArchive\Formatters\OaiDcFormatter;
 use Terraformers\OpenArchive\Formatters\OaiRecordFormatter;
 use Terraformers\OpenArchive\Helpers\DateTimeHelper;
+use Terraformers\OpenArchive\Helpers\RecordIdentityHelper;
 use Terraformers\OpenArchive\Helpers\ResumptionTokenHelper;
 use Terraformers\OpenArchive\Models\OaiRecord;
 use Throwable;
@@ -48,7 +52,9 @@ class OaiController extends Controller
     ];
 
     private static array $supported_verbs = [
+        OaiDocument::VERB_GET_RECORD,
         OaiDocument::VERB_IDENTIFY,
+        OaiDocument::VERB_LIST_IDENTIFIERS,
         OaiDocument::VERB_LIST_METADATA_FORMATS,
         OaiDocument::VERB_LIST_RECORDS,
     ];
@@ -105,7 +111,6 @@ class OaiController extends Controller
         $requestUrl = sprintf('%s%s', Director::absoluteBaseURL(), $request->getURL());
 
         $xmlDocument = BadVerbDocument::create();
-        $xmlDocument->setResponseDate();
         $xmlDocument->setRequestUrl($requestUrl);
 
         return $this->getResponseWithDocumentBody($xmlDocument);
@@ -116,7 +121,6 @@ class OaiController extends Controller
         $requestUrl = sprintf('%s%s', Director::absoluteBaseURL(), $request->getURL());
 
         $xmlDocument = CannotDisseminateFormatDocument::create();
-        $xmlDocument->setResponseDate();
         $xmlDocument->setRequestUrl($requestUrl);
 
         return $this->getResponseWithDocumentBody($xmlDocument);
@@ -129,8 +133,6 @@ class OaiController extends Controller
     {
         $xmlDocument = IdentifyDocument::create();
 
-        // Response Date defaults to the time of the Request. Extension point is provided in this method
-        $xmlDocument->setResponseDate();
         // Request URL defaults to the current URL. Extension point is provided in this method
         $xmlDocument->setRequestUrl($this->getRequestUrl($request));
         // Base URL defaults to the current URL. Extension point is provided in this method
@@ -161,7 +163,6 @@ class OaiController extends Controller
         $requestUrl = sprintf('%s%s', Director::absoluteBaseURL(), $request->getURL());
 
         $xmlDocument = ListMetadataFormatsDocument::create();
-        $xmlDocument->setResponseDate();
         $xmlDocument->setRequestUrl($requestUrl);
 
         foreach (array_keys($this->config()->get('supported_formats')) as $metadataPrefix) {
@@ -173,22 +174,76 @@ class OaiController extends Controller
         return $this->getResponseWithDocumentBody($xmlDocument);
     }
 
+    protected function ListRecords(HTTPRequest $request): HTTPResponse
+    {
+        $xmlDocument = ListRecordsDocument::create();
+
+        return $this->getRecordsResponse($request, $xmlDocument);
+    }
+
+    protected function ListIdentifiers(HTTPRequest $request): HTTPResponse
+    {
+        $xmlDocument = ListIdentifiersDocument::create();
+
+        return $this->getRecordsResponse($request, $xmlDocument);
+    }
+
+    protected function GetRecord(HTTPRequest $request): HTTPResponse
+    {
+        // The metadataPrefix that records will be output in. Should match to one of our supported_formats
+        $metadataPrefix = $request->getVar('metadataPrefix');
+        $oaiIdentifier = $request->getVar('identifier');
+
+        if (!$metadataPrefix || !array_key_exists($metadataPrefix, $this->config()->get('supported_formats'))) {
+            return $this->CannotDisseminateFormatResponse($request);
+        }
+
+        $xmlDocument = GetRecordDocument::create($this->getOaiRecordFormatter($metadataPrefix));
+        // Request URL defaults to the current URL. Extension point is provided in this method
+        $xmlDocument->setRequestUrl($this->getRequestUrl($request));
+
+        if (!$oaiIdentifier) {
+            $xmlDocument->addError(OaiDocument::ERROR_BAD_ARGUMENT, 'Missing argument: \'identifier\'');
+
+            // We cannot continue if we did not receive an identifier argument
+            return $this->getResponseWithDocumentBody($xmlDocument);
+        }
+
+        $id = RecordIdentityHelper::getIdFromOaiIdentifier($oaiIdentifier);
+
+        if (!$id) {
+            $xmlDocument->addError(OaiDocument::ERROR_BAD_ARGUMENT, 'Invalid argument: \'identifier\'');
+
+            // We cannot continue if the identifier argument is invalid
+            return $this->getResponseWithDocumentBody($xmlDocument);
+        }
+
+        $oaiRecord = OaiRecord::get_by_id($id);
+
+        if (!$oaiRecord || !$oaiRecord->exists()) {
+            $xmlDocument->addError(OaiDocument::ERROR_ID_DOES_NOT_EXIST);
+
+            // We cannot continue if we do not have a matching OAI Record
+            return $this->getResponseWithDocumentBody($xmlDocument);
+        }
+
+        $xmlDocument->processOaiRecord($oaiRecord);
+
+        return $this->getResponseWithDocumentBody($xmlDocument);
+    }
+
     /**
      * Supported arguments
      * - metadataPrefix
-     *
-     * Upcoming supported arguments
      * - from
      * - until
-     * - set
      * - resumptionToken
+     *
+     * Upcoming supported arguments
+     * - set
      */
-    protected function ListRecords(HTTPRequest $request): HTTPResponse
+    protected function getRecordsResponse(HTTPRequest $request, RecordsDocument $xmlDocument): HTTPResponse
     {
-        // The OaiRecord formatter that we're going to use
-        $xmlDocument = ListRecordsDocument::create();
-        // Response Date defaults to the time of the Request. Extension point is provided in this method
-        $xmlDocument->setResponseDate();
         // Request URL defaults to the current URL. Extension point is provided in this method
         $xmlDocument->setRequestUrl($this->getRequestUrl($request));
 
@@ -242,14 +297,14 @@ class OaiController extends Controller
             }
         }
 
-        // If we generated any errors above, then we should bail out there
-        if ($xmlDocument->hasErrors()) {
-            return $this->getResponseWithDocumentBody($xmlDocument);
-        }
-
         // If the requested metadataPrefix does not match any of our Record Formatters then we cannot continue
         if (!$metadataPrefix || !array_key_exists($metadataPrefix, $this->config()->get('supported_formats'))) {
             return $this->CannotDisseminateFormatResponse($request);
+        }
+
+        // If we generated any errors above, then we should bail out there
+        if ($xmlDocument->hasErrors()) {
+            return $this->getResponseWithDocumentBody($xmlDocument);
         }
 
         $xmlDocument->setFormatter($this->getOaiRecordFormatter($metadataPrefix));

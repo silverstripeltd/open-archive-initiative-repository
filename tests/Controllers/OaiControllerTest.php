@@ -113,9 +113,10 @@ class OaiControllerTest extends FunctionalTest
     public function verbUrlProvider(): array
     {
         return [
-            ['/api/v1/oai', 'Identify'],
-            ['/api/v1/oai', 'ListMetadataFormats'],
-            ['/api/v1/oai', 'ListRecords', 'oai_dc'],
+            ['/api/v1/oai', OaiDocument::VERB_IDENTIFY],
+            ['/api/v1/oai', OaiDocument::VERB_LIST_METADATA_FORMATS],
+            ['/api/v1/oai', OaiDocument::VERB_LIST_RECORDS, 'oai_dc'],
+            ['/api/v1/oai', OaiDocument::VERB_LIST_IDENTIFIERS, 'oai_dc'],
         ];
     }
 

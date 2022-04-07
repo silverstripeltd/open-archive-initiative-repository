@@ -4,8 +4,8 @@ namespace Terraformers\OpenArchive\Formatters;
 
 use DOMDocument;
 use DOMElement;
-use SilverStripe\Control\Director;
 use Terraformers\OpenArchive\Helpers\DateTimeHelper;
+use Terraformers\OpenArchive\Helpers\RecordIdentityHelper;
 use Terraformers\OpenArchive\Models\OaiRecord;
 
 class OaiDcFormatter extends OaiRecordFormatter
@@ -69,11 +69,9 @@ class OaiDcFormatter extends OaiRecordFormatter
         OaiRecord $oaiRecord,
         bool $includeMetadata = false
     ): DOMElement {
-        $identifier = $this->getIdentifier($oaiRecord);
-        $rootElement = $document->createElement('record');
-        $headerElement = $document->createElement('header');
+        $identifier = RecordIdentityHelper::generateOaiIdentifier($oaiRecord);
 
-        $rootElement->appendChild($headerElement);
+        $headerElement = $document->createElement('header');
 
         $identifierField = $document->createElement(self::FIELD_HEADER_IDENTIFIER);
         $identifierField->nodeValue = $identifier;
@@ -108,12 +106,20 @@ class OaiDcFormatter extends OaiRecordFormatter
         }
 
         if (!$includeMetadata) {
-            return $rootElement;
+            // For responses that do not include metadata, the header Element is returned as the root Element
+            return $headerElement;
         }
 
-        $metadataElement = $document->createElement('metadata');
+        // When we are including metadata with our response, we need to wrap both the header and metadata elements
+        // together into a root "record" element
+        $recordElement = $document->createElement('record');
+        // Append our header to the record Element (the header element is no longer our "root" element)
+        $recordElement->appendChild($headerElement);
 
-        $rootElement->appendChild($metadataElement);
+        // Generate our metadata Element
+        $metadataElement = $document->createElement('metadata');
+        // Similarly append the metadata Element to our root "record" Element
+        $recordElement->appendChild($metadataElement);
 
         $oaiElement = $document->createElement('oai_dc:dc');
         $oaiElement->setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
@@ -137,12 +143,7 @@ class OaiDcFormatter extends OaiRecordFormatter
             $this->addMetadataElement($document, $oaiElement, $oaiRecord, $elementName, $oaiRecordProperty);
         }
 
-        return $rootElement;
-    }
-
-    protected function getIdentifier(OaiRecord $oaiRecord): string
-    {
-        return sprintf('oai:%s:%s', Director::host(), $oaiRecord->ID);
+        return $recordElement;
     }
 
     protected function addMetadataElement(

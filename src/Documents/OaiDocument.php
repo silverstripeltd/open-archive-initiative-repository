@@ -36,6 +36,7 @@ abstract class OaiDocument
     public const ERROR_NO_RECORDS_MATCH = 'noRecordsMatch';
     public const ERROR_NO_SET_HIERARCHY = 'noSetHierarchy';
 
+    public const VERB_GET_RECORD = 'GetRecord';
     public const VERB_IDENTIFY = 'Identify';
     public const VERB_LIST_IDENTIFIERS = 'ListIdentifiers';
     public const VERB_LIST_METADATA_FORMATS = 'ListMetadataFormats';
@@ -76,6 +77,8 @@ abstract class OaiDocument
 
         // Append it to our primary document
         $this->document->appendChild($rootElement);
+        // Set the Response date. Default is simply the time of instantiation
+        $this->setResponseDate();
     }
 
     public function getDocumentBody(): string

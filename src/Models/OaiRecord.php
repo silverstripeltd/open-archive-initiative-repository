@@ -8,12 +8,19 @@ use SilverStripe\ORM\ManyManyThroughList;
 use Terraformers\OpenArchive\Models\Relationships\OaiRecordOaiSet;
 
 /**
- * All MANAGED_FIELDS support CSV format:
+ * CSV SUPPORT:
+ * All MANAGED_FIELDS support CSV format *by default*. Be sure to enclose any values that contain commas:
  * Separator = ",", Enclosure = '"', Escape = "\\"
  *
- * Be sure to enclose any values that contain commas
+ * Why CSV? Because OAI spec does not restrict the number of fields that can be provided for any given record. EG, you
+ * can technically provide any number or Titles, or Descriptions, etc
  *
- * Why CSV? Because OAI spec does not restrict the number of fields that can be provided for any given record
+ * DISABLE CSV:
+ * You can disable CSV formats for any field you like by updating the `csv_fields` configuration (set the desired field
+ * to false rather than true to indicate that it is not CSV)
+ *
+ * Why disable CSV? Well, because it can be a bit of a pain to have to format all of your data for CSV support when/if
+ * you know you'll never need it
  *
  * @property string $Contributors
  * @property string $Coverages
@@ -116,6 +123,23 @@ class OaiRecord extends DataObject
 
     private static string $default_sort = 'ID ASC';
 
+    private static array $csv_fields = [
+        self::FIELD_CONTRIBUTORS => true,
+        self::FIELD_COVERAGES => true,
+        self::FIELD_CREATORS => true,
+        self::FIELD_DESCRIPTIONS => true,
+        self::FIELD_FORMATS => true,
+        self::FIELD_IDENTIFIER => true,
+        self::FIELD_LANGUAGES => true,
+        self::FIELD_PUBLISHERS => true,
+        self::FIELD_RELATIONS => true,
+        self::FIELD_RIGHTS => true,
+        self::FIELD_SOURCES => true,
+        self::FIELD_SUBJECTS => true,
+        self::FIELD_TITLES => true,
+        self::FIELD_TYPES => true,
+    ];
+
     public function addSet(string $title): void
     {
         $this->OaiSets()->add(OaiSet::findOrCreate($title));
@@ -141,6 +165,13 @@ class OaiRecord extends DataObject
         foreach ($records->column() as $id) {
             $list->removeByID($id);
         }
+    }
+
+    public static function fieldSupportsCsv(string $fieldName): bool
+    {
+        $csvConfig = static::config()->get('csv_fields');
+
+        return $csvConfig[$fieldName] ?? false;
     }
 
 }

@@ -158,7 +158,17 @@ class OaiDcFormatter extends OaiRecordFormatter
             return;
         }
 
-        // CSV values are supported (and expected). Parse the field value as a CSV and create one element per value
+        // If this field has been marked as *not* supporting CSV, then we just add one node with the value as is
+        if (!OaiRecord::fieldSupportsCsv($property)) {
+            $element = $document->createElement($elementName);
+            $element->nodeValue = $oaiRecord->{$property};
+
+            $appendTo->appendChild($element);
+
+            return;
+        }
+
+        // If CSV values are marked as supported. Parse the field value as a CSV and create one element per value
         foreach (str_getcsv($oaiRecord->{$property}) as $content) {
             $element = $document->createElement($elementName);
             $element->nodeValue = $content;

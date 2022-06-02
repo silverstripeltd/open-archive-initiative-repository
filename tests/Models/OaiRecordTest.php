@@ -66,4 +66,11 @@ class OaiRecordTest extends SapphireTest
         $this->assertCount(0, $record->OaiSets());
     }
 
+    public function testFieldSupportsCsv(): void
+    {
+        foreach (OaiRecord::MANAGED_FIELDS as $fieldName) {
+            $this->assertTrue(OaiRecord::fieldSupportsCsv($fieldName));
+        }
+    }
+
 }

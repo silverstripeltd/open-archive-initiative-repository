@@ -10,7 +10,7 @@
     ],
     "license": "BSD-3-Clause",
     "require": {
-        "php": ">=7.4",
+        "php": "^7.4 || ^8.0",
         "silverstripe/framework": "^4.7",
         "symbiote/silverstripe-queuedjobs": "^4"
     },

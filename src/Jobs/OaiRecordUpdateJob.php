@@ -96,7 +96,7 @@ class OaiRecordUpdateJob extends AbstractQueuedJob implements QueuedJob
                 $errors[] = sprintf('Unsupported OAI field provided: %s', $oaiField);
             }
 
-            $oaiRecord->{$oaiField} = $dataObject->relField($dataObjectField);
+            $oaiRecord->{$oaiField} = $this->sanitiseContent($dataObject->relField($dataObjectField));
         }
 
         if ($errors) {
@@ -158,6 +158,20 @@ class OaiRecordUpdateJob extends AbstractQueuedJob implements QueuedJob
         }
 
         return $oaiRecord;
+    }
+
+    /**
+     * @param mixed $content
+     * @return mixed
+     */
+    protected function sanitiseContent($content)
+    {
+        if (!is_string($content)) {
+            return $content;
+        }
+
+        // Attempt to remove any illegal characters
+        return preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', ' ', $content);
     }
 
 }

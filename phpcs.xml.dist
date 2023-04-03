@@ -5,11 +5,21 @@
     <file>src</file>
     <file>tests</file>
 
+    <!-- Show progress and output sniff names on violation, and add colours -->
+    <arg value="p" />
+    <arg name="colors" />
+    <arg value="s" />
+
     <rule ref="PSR2">
         <!-- Allow non camel cased method names - some base SS method names are PascalCase or snake_case -->
         <exclude name="PSR1.Methods.CamelCapsMethodName.NotCamelCaps"/>
         <!-- This rule conflicts with Slevomat standards requiring an empty line before closing brace -->
         <exclude name="PSR2.Classes.ClassDeclaration.CloseBraceAfterBody"/>
+    </rule>
+
+    <!-- Do not require Test classes to define Type Hints - we're forced to exclude them due to how we extend -->
+    <rule ref="SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingAnyTypeHint">
+        <exclude-pattern>app/tests/*</exclude-pattern>
     </rule>
 
     <!-- All "use" statements must be used in the code. -->

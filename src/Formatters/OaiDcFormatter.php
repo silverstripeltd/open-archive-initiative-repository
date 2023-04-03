@@ -14,7 +14,6 @@ class OaiDcFormatter extends OaiRecordFormatter
     private const FIELD_HEADER_DATESTAMP = 'datestamp';
     private const FIELD_HEADER_IDENTIFIER = 'identifier';
     private const FIELD_HEADER_SET_SPEC = 'setSpec';
-    private const FIELD_HEADER_STATUS = 'status';
 
     private const FIELD_CONTRIBUTOR = 'dc:contributor';
     private const FIELD_COVERAGE = 'dc:coverage';
@@ -99,10 +98,7 @@ class OaiDcFormatter extends OaiRecordFormatter
         }
 
         if ($oaiRecord->Deleted) {
-            $statusElement = $document->createElement(self::FIELD_HEADER_STATUS);
-            $statusElement->nodeValue = 'deleted';
-
-            $headerElement->appendChild($statusElement);
+            $headerElement->setAttribute('status', 'deleted');
         }
 
         if (!$includeMetadata) {

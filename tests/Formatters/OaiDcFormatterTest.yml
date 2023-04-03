@@ -1,0 +1,8 @@
+SilverStripe\CMS\Model\SiteTree:
+  page:
+    Title: Page Title
+
+Terraformers\OpenArchive\Models\OaiRecord:
+  record:
+    Titles: Record Titles
+    Record: =>SilverStripe\CMS\Model\SiteTree.page

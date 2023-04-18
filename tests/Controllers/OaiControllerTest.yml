@@ -1,0 +1,14 @@
+Terraformers\OpenArchive\Models\OaiSet:
+  set1:
+    Title: Set1
+
+Terraformers\OpenArchive\Models\OaiRecord:
+  recordA:
+    Titles: Random Record A
+    OaiSets: =>Terraformers\OpenArchive\Models\OaiSet.set1
+  recordB:
+    Titles: Random Record B
+    OaiSets: =>Terraformers\OpenArchive\Models\OaiSet.set1
+  recordC:
+    Titles: Random Record C
+    OaiSets: =>Terraformers\OpenArchive\Models\OaiSet.set1

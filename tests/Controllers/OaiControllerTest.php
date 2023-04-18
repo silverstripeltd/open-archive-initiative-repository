@@ -2,14 +2,17 @@
 
 namespace Terraformers\OpenArchive\Tests\Controllers;
 
+use ReflectionClass;
 use SilverStripe\Dev\FunctionalTest;
 use SimpleXMLElement;
+use Terraformers\OpenArchive\Controllers\OaiController;
 use Terraformers\OpenArchive\Documents\OaiDocument;
+use Terraformers\OpenArchive\Models\OaiRecord;
 
 class OaiControllerTest extends FunctionalTest
 {
 
-    protected $usesDatabase = true; // phpcs:ignore
+    protected static $fixture_file = 'OaiControllerTest.yml';  // phpcs:ignore
 
     public function testXmlResponseHeader(): void
     {
@@ -120,4 +123,53 @@ class OaiControllerTest extends FunctionalTest
         ];
     }
 
+    public function testFetchOaiRecords(): void
+    {
+        // Reflect the OaiController so we can access the protected function fetchOaiRecords()
+        $controller = OaiController::create();
+        $reflection = new ReflectionClass(OaiController::class);
+        $method = $reflection->getMethod('fetchOaiRecords');
+        $method->setAccessible(true);
+
+        /** @var DOMElement $result */
+        $result = $method->invoke($controller);
+        $this->assertNotNull($result);
+
+        // Create variables to access each YML file record
+        $recordA = $this->objFromFixture(OaiRecord::class, 'recordA');
+        $recordB = $this->objFromFixture(OaiRecord::class, 'recordB');
+        $recordC = $this->objFromFixture(OaiRecord::class, 'recordC');
+
+        // Check that the first and last items in the list match
+        // their order in the YML file
+        $this->assertEquals('Random Record A', $result->first()->Titles);
+        $this->assertEquals('Random Record C', $result->last()->Titles);
+
+        // Update the records with new titles and check that the LastEdited date has changed for each
+        $recordAInitialEditDate = $recordA->LastEdited;
+        $recordBInitialEditDate = $recordB->LastEdited;
+        $recordCInitialEditDate = $recordC->LastEdited;
+
+        sleep(1); // Pause is required so the items do not all update in the same millisecond
+        $recordB->Titles = 'First Edited';
+        $recordB->write();
+        $this->assertNotEquals($recordBInitialEditDate, $recordB->LastEdited);
+
+        sleep(1);
+        $recordC->Titles = 'Second Edited';
+        $recordC->write();
+        $this->assertNotEquals($recordCInitialEditDate, $recordC->LastEdited);
+
+        sleep(1);
+        $recordA->Titles = 'Third Edited';
+        $recordA->write();
+        $this->assertNotEquals($recordAInitialEditDate, $recordA->LastEdited);
+
+        // Update the result
+        $result = $method->invoke($controller);
+
+        // Check that the first and last items in the list now match the order in which they were edited
+        $this->assertEquals('First Edited', $result->first()->Titles);
+        $this->assertEquals('Third Edited', $result->last()->Titles);
+    }
 }

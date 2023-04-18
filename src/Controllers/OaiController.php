@@ -421,7 +421,7 @@ class OaiController extends Controller
         }
 
         if (!$filters) {
-            return PaginatedList::create(OaiRecord::get());
+            return PaginatedList::create(OaiRecord::get()->sort('LastEdited ASC'));
         }
 
         $list = OaiRecord::get()
